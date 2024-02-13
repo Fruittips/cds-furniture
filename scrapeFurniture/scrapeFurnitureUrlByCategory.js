@@ -24,8 +24,8 @@ const urlParams = "dir=desc&limit=180&order=created_at"; //show 180 items per pa
     });
     const page = await browser.newPage();
 
-    for (const subCategoryKey of Object.keys(SUBCATEGORY.chairs)) {
-        const url = SUBCATEGORY.chairs[subCategoryKey];
+    for (const subCategoryKey of Object.keys(SUBCATEGORY.beds)) {
+        const url = SUBCATEGORY.beds[subCategoryKey];
 
         await page.evaluateOnNewDocument(() => {
             delete navigator.__proto__.webdriver;
@@ -40,11 +40,11 @@ const urlParams = "dir=desc&limit=180&order=created_at"; //show 180 items per pa
         productUrls.forEach(async (url) => {
             await writeToCsv({
                 data: {
-                    category: "chairs",
+                    category: "beds",
                     subcategory: subCategoryKey,
                     url,
                 },
-                category: "chairs",
+                category: "beds",
                 columns: PRODUCT_URLS_COLUMNS,
                 folderName: "productUrls",
             });
@@ -64,11 +64,11 @@ const urlParams = "dir=desc&limit=180&order=created_at"; //show 180 items per pa
             moreProductUrls.forEach(async (url) => {
                 await writeToCsv({
                     data: {
-                        category: "chairs",
+                        category: "beds",
                         subcategory: subCategoryKey,
                         url,
                     },
-                    category: "chairs",
+                    category: "beds",
                     columns: PRODUCT_URLS_COLUMNS,
                     folderName: "productUrls",
                 });
@@ -77,6 +77,7 @@ const urlParams = "dir=desc&limit=180&order=created_at"; //show 180 items per pa
         }
     }
 
+    console.log("Done scraping product urls");
     await browser.close();
 })();
 

@@ -23,9 +23,50 @@ const CHAIRS_URLS = {
     "outdoor-dining-sets": "https://www.fortytwo.sg/outdoor/outdoor-dining-sets.html",
 };
 
-const TABLES_URLS = {};
+const TABLES_URLS = {
+    "dining-tables": "https://www.fortytwo.sg/dining/dining-tables.html",
+    "coffee-tables": "https://www.fortytwo.sg/living-room/coffee-table.html",
+    "side-tables": "https://www.fortytwo.sg/living-room/side-tables.html",
+    "bedside-tables": "https://www.fortytwo.sg/bedroom-furniture/bedside-tables.html",
+    "study-desks": "https://www.fortytwo.sg/study-room/study-desk.html",
+    "outdoor-tables": "https://www.fortytwo.sg/outdoor/outdoor-tables.html",
+    "dressing-tables": "https://www.fortytwo.sg/bedroom-furniture/dressing-tables.html",
+    "bar-tables": "https://www.fortytwo.sg/living-room/bar-tables.html",
+    "office-tables": "https://www.fortytwo.sg/office-solution/office-tables.html",
+    "dining-table-sets": "https://www.fortytwo.sg/dining/dining-room.html",
+};
 
-/* TODO: add more for other categories */
+const STORAGE_URLS = {
+    "standalone-wardrobes": "https://www.fortytwo.sg/bedroom-furniture/wardrobe.html",
+    "modular-wardrobes": "https://www.fortytwo.sg/bedroom-furniture/modular-wardrobe.html",
+    "tv-consoles": "https://www.fortytwo.sg/living-room/tv-consoles.html",
+    "display-cabinets-shelves":
+        "https://www.fortytwo.sg/living-room/display-cabinet/display-cabinets-shelves.html",
+    "bookcase-storage":
+        "https://www.fortytwo.sg/living-room/display-cabinet/bookcase-storages.html",
+    "sideboards-highboards":
+        "https://www.fortytwo.sg/living-room/display-cabinet/sideboards-highboards.html",
+    "shoe-racks": "https://www.fortytwo.sg/living-room/shoe-racks.html",
+    "kitchen-cabinets-trolley": "https://www.fortytwo.sg/dining/kitchen-furniture.html",
+    "chest-of-drawers":
+        "https://www.fortytwo.sg/bedroom-furniture/storage-units/chest-of-drawers.html",
+    "office-cabinets":
+        "https://www.fortytwo.sg/bedroom-furniture/storage-units/chest-of-drawers.html",
+    "outdoor-storage-cabinets": "https://www.fortytwo.sg/outdoor/cabinets.html",
+};
+
+const BEDS_URLS = {
+    "upholstered-beds":
+        "https://www.fortytwo.sg/bedroom-furniture/beds/bedframe/upholstered-bedframe.html",
+    "storage-beds": "https://www.fortytwo.sg/bedroom-furniture/beds/storage-beds.html",
+    "double-decker-beds": "https://www.fortytwo.sg/bedroom-furniture/beds/double-decks.html",
+    "metal-bed-frames": "https://www.fortytwo.sg/bedroom-furniture/beds/metal-bed-frames.html",
+    "wooden-bed-frames": "https://www.fortytwo.sg/bedroom-furniture/beds/wooden-bed-frames.html",
+    "trundle-beds": "https://www.fortytwo.sg/bedroom-furniture/beds/3-in-1-beds.html",
+    "bed-frame-with-mattress": "https://www.fortytwo.sg/bedroom-furniture/bed-set-package.html",
+    "bedroom-sets": "https://www.fortytwo.sg/bedroom-furniture/bedroom-sets.html",
+};
+
 const SOFA_42_TO_CATEGORY_L2_MAPPING = {
     "2-seaters-love-seats": "2-seaters",
     "3-seaters-large-sofas": "3-seaters",
@@ -44,9 +85,9 @@ const CATEGORY = ["sofas", "chairs", "tables", "beds", "storage"];
 const SUBCATEGORY = {
     sofas: SOFAS_URLS,
     chairs: CHAIRS_URLS,
-    tables: [""],
-    beds: [""],
-    storage: [""],
+    tables: TABLES_URLS,
+    beds: BEDS_URLS,
+    storage: STORAGE_URLS,
 };
 
 const PRODUCT_URLS_COLUMNS = ["category", "subcategory", "url"];
