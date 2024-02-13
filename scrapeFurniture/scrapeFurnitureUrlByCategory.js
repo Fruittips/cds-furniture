@@ -24,8 +24,8 @@ const urlParams = "dir=desc&limit=180&order=created_at"; //show 180 items per pa
     });
     const page = await browser.newPage();
 
-    for (const subCategoryKey of Object.keys(SUBCATEGORY.sofas)) {
-        const url = SUBCATEGORY.sofas[subCategoryKey];
+    for (const subCategoryKey of Object.keys(SUBCATEGORY.chairs)) {
+        const url = SUBCATEGORY.chairs[subCategoryKey];
 
         await page.evaluateOnNewDocument(() => {
             delete navigator.__proto__.webdriver;
@@ -36,32 +36,72 @@ const urlParams = "dir=desc&limit=180&order=created_at"; //show 180 items per pa
             timeout: 0,
         });
 
-        const productUrls = await page.evaluate(() => {
-            const productLinks = Array.from(document.querySelectorAll(".item-title a"));
-            return productLinks.map((link) => link.href);
-        });
-
+        const productUrls = await scrollAndGetProductUrls(page);
         productUrls.forEach(async (url) => {
             await writeToCsv({
                 data: {
-                    category: "sofas",
+                    category: "chairs",
                     subcategory: subCategoryKey,
                     url,
                 },
-                category: "sofas",
+                category: "chairs",
                 columns: PRODUCT_URLS_COLUMNS,
                 folderName: "productUrls",
             });
         });
 
-        await delay(10000);
+        //check if there are more pages
+        let nextPageButton = await page.$(".next.i-next");
+        while (nextPageButton) {
+            const [response] = await Promise.all([
+                page.waitForNavigation({ waitUntil: "networkidle0", timeout: 0 }),
+                nextPageButton.click(),
+            ]);
+
+            await page.evaluate(() => window.scrollTo(0, 0));
+
+            const moreProductUrls = await scrollAndGetProductUrls(page);
+            moreProductUrls.forEach(async (url) => {
+                await writeToCsv({
+                    data: {
+                        category: "chairs",
+                        subcategory: subCategoryKey,
+                        url,
+                    },
+                    category: "chairs",
+                    columns: PRODUCT_URLS_COLUMNS,
+                    folderName: "productUrls",
+                });
+            });
+            nextPageButton = await page.$(".next.i-next");
+        }
     }
 
     await browser.close();
 })();
 
-function delay(time) {
-    return new Promise(function (resolve) {
-        setTimeout(resolve, time);
+const scrollAndGetProductUrls = async (page) => {
+    await page.evaluate(async () => {
+        await new Promise((resolve, reject) => {
+            let totalHeight = 0;
+            const distance = 100;
+            const timer = setInterval(() => {
+                const scrollHeight = document.body.scrollHeight;
+                window.scrollBy(0, distance);
+                totalHeight += distance;
+
+                if (totalHeight >= scrollHeight) {
+                    clearInterval(timer);
+                    resolve();
+                }
+            }, 50);
+        });
     });
-}
+
+    const productLinks = await page.evaluate(() => {
+        const productLinks = Array.from(document.querySelectorAll(".item-title a"));
+        return productLinks.map((link) => link.href);
+    });
+
+    return productLinks;
+};
