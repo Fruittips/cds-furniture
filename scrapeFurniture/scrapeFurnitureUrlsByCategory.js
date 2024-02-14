@@ -6,7 +6,7 @@ const {
     SOFA_CATEGORY_L2_MAPPING,
     PRODUCT_URLS_COLUMNS,
 } = require("./constants");
-const { writeToCsv } = require("./writeToCsv");
+const { writeToCsv } = require("./csv");
 
 const urlParams = "dir=desc&limit=180&order=created_at"; //show 180 items per page and sort by created_at
 
@@ -20,16 +20,17 @@ const urlParams = "dir=desc&limit=180&order=created_at"; //show 180 items per pa
             "--disable-dev-shm-usage",
             "--lang=en-US,en;q=0.9",
         ],
-        slowMo: 250,
+        // slowMo: 250,
     });
     const page = await browser.newPage();
 
+    /* to prevent captchas on every new page */
+    await page.evaluateOnNewDocument(() => {
+        delete navigator.__proto__.webdriver;
+    });
+
     for (const subCategoryKey of Object.keys(SUBCATEGORY.beds)) {
         const url = SUBCATEGORY.beds[subCategoryKey];
-
-        await page.evaluateOnNewDocument(() => {
-            delete navigator.__proto__.webdriver;
-        });
 
         await page.goto(`${url}?${urlParams}`, {
             waitUntil: `networkidle0`,
@@ -82,6 +83,7 @@ const urlParams = "dir=desc&limit=180&order=created_at"; //show 180 items per pa
 })();
 
 const scrollAndGetProductUrls = async (page) => {
+    /* TODO: probably dont need scrolling, need investigate if can delete */
     await page.evaluate(async () => {
         await new Promise((resolve, reject) => {
             let totalHeight = 0;

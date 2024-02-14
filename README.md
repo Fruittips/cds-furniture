@@ -3,7 +3,7 @@ Semantic furniture feature extraction and image search
 
 # How to run
 For getting of furniture urls by category run
-```node scrapeFurnitureUrlByCategory.js```
+```node scrapeFurnitureUrlsByCategory.js```
 csv files will be stored under the `productUrls` folder
 
 For getting of individual furniture details run
