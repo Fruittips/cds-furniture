@@ -1,7 +1,6 @@
 const puppeteer = require("puppeteer");
 const { readCsv } = require("./csv");
 const { CATEGORY } = require("./constants");
-
 /**
  * each csv record has this following structure:
  *  {
@@ -43,30 +42,28 @@ const { CATEGORY } = require("./constants");
                 timeout: 0,
             });
 
-            //if dont have images -> have to get from thumbnails all
-            // const basicProductInfo = await getBasicProductInfo(page);
+            const basicProductInfo = await getBasicProductInfo(page);
+            const { images, lifestyleImages } = await getProductImages(page);
+            const colours = await getColours(page);
+            const specifications = await getSpecifications(page);
+            const { productId, colour } = await getProductColourAndId(page, specifications);
 
-            const [productImages, colours] = await getMoreProductImagesAndColours(page);
-            // const productImages = await getProductImages(page);
+            console.log("colours", colours);
+            console.log("images", images);
 
-            /* TODO: if colours == null, abstract from either specs/title */
+            /* TODO: trim by underscores */
+            let x = null;
+            if (colours) {
+                Object.keys(colours).forEach((colourKey) => {
+                    const colourData = colours[colourKey];
+                    const imageUrl = colourData.imageUrl;
 
-            // const [colours, productIds] = await getColoursAndProductIds(page);
-            // const specifications = await getSpecifications(page);
-
-            // if (colours.length > 1) {
-            //     //TODO: get the images for the other colours too
-            //     //get a set of colours they are unique links
-            // }
-
-            console.log({
-                // basicProductInfo,
-                colours,
-                // productIds,
-                // productImages,
-                // specifications,
-            });
-            console.log("-----");
+                    if (images.includes(imageUrl)) {
+                        x = colourData.productId;
+                    }
+                });
+            }
+            console.log("x", x);
         }
         return;
     }
@@ -92,79 +89,35 @@ const getBasicProductInfo = async (page) => {
     };
 };
 
-const getColoursAndProductIds = async (page) => {
-    let colours = null;
-    let productIds = {};
+const getProductColourAndId = async (page, specifications) => {
+    let productId = null;
+    let colour = null;
 
-    const spConfigData = await page.evaluate(() => {
-        const scripts = Array.from(document.querySelectorAll("script"));
+    /**
+     * colours can be extracted from 2 places:
+     * 1. from the specifications
+     * 2. if it is not in specifications, then it is in the product title
+     */
 
-        for (const script of scripts) {
-            if (script.innerText.includes("var spConfig = new Product.Config")) {
-                const regex = /var spConfig = new Product.Config\((.+)\);/;
-                const match = script.innerText.match(regex);
-                if (match && match[1]) {
-                    try {
-                        return JSON.parse(match[1].replace(/\/\*.*?\*\//g, ""));
-                    } catch (e) {
-                        console.error("Could not parse spConfig JSON:", e);
-                    }
-                }
-                break;
-            }
-        }
-
-        return null;
-    });
-
-    if (spConfigData) {
-        const attributes = spConfigData.attributes;
-        const attrObjKeys = Object.keys(attributes);
-        attrObjKeys.forEach((key) => {
-            const colourOptions = attributes[key].options;
-
-            if (colourOptions.length > 1) {
-                colours = colourOptions.map((option) => option.label);
-                colourOptions.forEach((option) => {
-                    productIds[`${option.label}`] = option.products[0];
-                });
-            }
-        });
-    } else {
-        /* Some pages do not have spConfig -> for those that do not have multiple colour options */
-
-        /**
-         * colours can be extracted from 2 places:
-         * 1. from the specifications
-         * 2. if it is not in specifications, then it is in the product title
-         */
-        const specifications = await getSpecifications(page);
-
-        if (specifications?.["Colour"]) {
-            colours = [specifications["Colour"].trim()];
-        }
-
-        if (!colours) {
-            const colour = await page.evaluate(() => {
-                const colourRegex = /\(([^)]+)\)/; // Matches text inside parentheses
-                const title = document.querySelector('h1[itemprop="name"]').innerText;
-                const matches = title.match(colourRegex);
-                return matches ? matches[1] : null;
-            });
-            colours = [colour];
-        }
-
-        const productId = await page.evaluate(() => {
-            const productElement = document.querySelector(".product-label-placeholder");
-            return productElement ? productElement.getAttribute("data-productid") : null;
-        });
-
-        if (colours.length > 0 && productId) {
-            productIds[`${colours[0]}`] = productId;
-        }
+    if (specifications?.["Colour"]) {
+        colour = specifications["Colour"].trim().toLowerCase();
     }
 
-    return [colours, productIds];
+    if (!colour) {
+        const colourText = await page.evaluate(() => {
+            const colourRegex = /\(([^)]+)\)/; // Matches text inside parentheses
+            const title = document.querySelector('h1[itemprop="name"]').innerText;
+            const matches = title.match(colourRegex);
+            return matches ? matches[1] : null;
+        });
+        colour = colourText && colourText.toLowerCase();
+    }
+
+    productId = await page.evaluate(() => {
+        const productElement = document.querySelector("input[name='product']");
+        return productElement ? productElement.getAttribute("value") : null;
+    });
+    return { productId, colour };
 };
 
 const getSpecifications = async (page) => {
@@ -193,16 +146,30 @@ const getSpecifications = async (page) => {
     return specifications;
 };
 
-//find <ul> with class="more-views" -> find all <li> -> find all <a> -> get href
 const getProductImages = async (page) => {
-    const images = await page.evaluate(() => {
-        const imageUrls = Array.from(document.querySelectorAll(".more-views li a")).map(
-            (a) => a.href
-        );
-        return imageUrls;
+    const [images, lifestyleImages] = await page.evaluate(() => {
+        const lifestyleImageUrls = [];
+        const imageUrls = [];
+        Array.from(document.querySelectorAll("a.lightbox")).forEach((a) => {
+            const href = a.href;
+            const img = a.querySelector("img");
+            const alt = img.alt;
+
+            const containsLifestyle = alt.includes("lifestyle") || alt.includes("Lifestyle");
+            if (containsLifestyle) {
+                lifestyleImageUrls.push(href);
+                return;
+            }
+
+            imageUrls.push(href);
+        });
+
+        const uniqueImageUrls = [...new Set(imageUrls)];
+        const uniqueLifeStyleImageUrls = [...new Set(lifestyleImageUrls)];
+        return [uniqueImageUrls, uniqueLifeStyleImageUrls];
     });
 
-    return images;
+    return { images, lifestyleImages };
 };
 
 /**
@@ -212,10 +179,10 @@ const getProductImages = async (page) => {
  * @param {String[]} jsonData.small_image
  * @param {Object} jsonData.medium_image
  * @param {Object} jsonData.base_image
- * @param {Object} jsonData.additional_images -> the validation images can be found here TODO: check if image with product id -> cfm is validation image
+ * @param {Object} jsonData.additional_images
  * @memberof ExampleClass
  */
-const getMoreProductImagesAndColours = async (page) => {
+const getColours = async (page) => {
     const productImagesData = await page.evaluate(() => {
         // Find the script tag by its content, assuming this snippet is unique enough
         const scriptTags = Array.from(document.querySelectorAll("script"));
@@ -241,21 +208,16 @@ const getMoreProductImagesAndColours = async (page) => {
 
     let colours = null;
     if (productImagesData) {
-        const { option_labels, small_image, medium_image, base_image, additional_images } =
-            productImagesData;
-
-        // console.log(small_image);
-        // console.log(medium_image);
-        console.log(base_image);
-        // console.log(additional_images);
-        colours = Object.keys(option_labels);
-
-        // Object.keys(option_labels).forEach((colourKey) => {
-        //     const x = option_labels[colourKey].configurable_product.additional_images;
-        //     console.log(x);
-        //     console.log("-----");
-        // });
+        colours = {};
+        const { option_labels } = productImagesData;
+        Object.keys(option_labels).forEach((colourKey) => {
+            const variation = option_labels[colourKey];
+            colours[colourKey] = {
+                productId: variation.products[0],
+                imageUrl: variation.configurable_product.base_image,
+            };
+        });
     }
 
-    return [productImagesData, colours];
+    return colours;
 };
