@@ -36,8 +36,7 @@ const scrape = async ({ category }) => {
         category: category,
     });
 
-    // const processedUrls = initProcessedUrls(category);
-    const processedUrls = initProcessedUrls(`test-${category}`);
+    const processedUrls = initProcessedUrls(category);
     for (const furniture of furnitureListings) {
         const url = furniture.url;
 
@@ -96,7 +95,7 @@ const scrape = async ({ category }) => {
         };
 
         buffer.push(productRowData);
-        if (buffer.length >= 2) {
+        if (buffer.length >= 50) {
             parentPort.postMessage({ data: buffer, category: category });
             buffer.length = 0;
         }
