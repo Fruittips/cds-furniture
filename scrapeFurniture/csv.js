@@ -28,7 +28,11 @@ const writeToCsv = async ({ data, category, columns, folderName }) => {
         columns
             .map((col) => {
                 if (Array.isArray(data[col])) {
-                    return data[col].join("|");
+                    return `"${JSON.stringify(data[col]).replace(/"/g, '""')}"`;
+                }
+
+                if (typeof data[col] === "object" && data[col] !== null) {
+                    return `"${JSON.stringify(data[col]).replace(/"/g, '""')}"`;
                 }
 
                 return data[col] || "";

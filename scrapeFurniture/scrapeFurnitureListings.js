@@ -7,12 +7,13 @@ const TABLE_COLUMNS = [
     "brand",
     "product_id",
     "supplier_product_id",
-    "specifications",
     "price",
-    "colour",
-    "colours",
+    "currency",
     "image_urls",
     "lifestyle_image_urls",
+    "specifications",
+    "colour",
+    "colours",
     "description",
 ];
 /**
@@ -25,7 +26,7 @@ const TABLE_COLUMNS = [
  */
 (async () => {
     const browser = await puppeteer.launch({
-        headless: false,
+        // headless: false,
         args: [
             `--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/119.0`,
             "--no-sandbox",
@@ -48,6 +49,7 @@ const TABLE_COLUMNS = [
             category: category,
         });
 
+        let counter = 0;
         for (const furniture of furnitureListings) {
             const url = furniture.url;
 
@@ -68,12 +70,13 @@ const TABLE_COLUMNS = [
                 brand: basicProductInfo.brand,
                 product_id: productId,
                 supplier_product_id: basicProductInfo.supplierProductId,
-                specifications: JSON.stringify(specifications),
                 price: basicProductInfo.price,
-                colour: colour,
-                colours: JSON.stringify(colours),
+                currency: basicProductInfo.currency,
                 image_urls: images,
                 lifestyle_image_urls: lifestyleImages,
+                specifications: specifications,
+                colour: colour,
+                colours: colours,
                 description: description,
             };
 
@@ -84,9 +87,11 @@ const TABLE_COLUMNS = [
                 folderName: "productDetails",
             });
 
-            console.count(`Scraped product: ${basicProductInfo.title}`);
+            counter++;
+            console.log(`[${counter}] Scraped product: ${basicProductInfo.title}`);
         }
 
+        counter = 0;
         console.log(`Scraped all products in category: ${category}`);
         return;
     }
@@ -104,11 +109,17 @@ const getBasicProductInfo = async (page) => {
             : null;
     });
 
+    const currencyCode = await page.evaluate(() => {
+        const currencyElement = document.querySelector("meta[itemprop='priceCurrency']");
+        return currencyElement ? currencyElement.getAttribute("content") : null;
+    });
+
     return {
         title: productDetails.name,
         supplierProductId: productDetails.id,
         price: productDetails.price,
         brand: productDetails.brand,
+        currency: currencyCode,
     };
 };
 
