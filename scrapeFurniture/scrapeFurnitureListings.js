@@ -293,14 +293,30 @@ const getColours = async (page) => {
 
     let colours = null;
     if (productImagesData) {
+        colours = {};
         const { option_labels } = productImagesData;
-        if (option_labels) {
-            colours = {};
+        if (option_labels.length > 0) {
             Object.keys(option_labels).forEach((colourKey) => {
                 const variation = option_labels[colourKey];
                 colours[colourKey] = {
                     productId: variation.products[0],
                     imageUrl: variation.configurable_product.base_image,
+                };
+            });
+        } else {
+            const options = await page.evaluate(() => {
+                const selectElement = document.querySelector("select");
+                const options = Array.from(selectElement.querySelectorAll("option"));
+                return options;
+            });
+
+            options.slice(1).forEach((option) => {
+                const colourLabel = option.config.label.trim().toLowerCase();
+                console.log("colour", colourLabel);
+
+                colours[colourLabel] = {
+                    productId: option.config.products[0],
+                    imageUrl: null,
                 };
             });
         }
