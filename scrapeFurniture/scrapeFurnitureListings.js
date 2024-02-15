@@ -64,7 +64,7 @@ const TABLE_COLUMNS = [
             }
 
             try {
-                const success = await gotoWithRetry(page, testUrl, 3); //retry going to the page 3 times
+                const success = await gotoWithRetry(page, url, 3); //retry going to the page 3 times
                 if (!success) {
                     console.log(`\x1b[31mFailed to load page after retries: ${url}\x1b[0m`);
                     continue;
