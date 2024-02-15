@@ -24,7 +24,7 @@ const TABLE_COLUMNS = [
 
 const startWorker = (workerData) => {
     return new Promise((resolve, reject) => {
-        const worker = new Worker(path.join(__dirname, "scrapeFurnitureListingsWorker.js"), {
+        const worker = new Worker(path.join(__dirname, "worker.js"), {
             workerData,
         });
 

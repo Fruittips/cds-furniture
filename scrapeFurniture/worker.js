@@ -142,7 +142,7 @@ const getBasicProductInfo = async (page) => {
 
     /* fallback if productDetails is empty */
     const title = await page.evaluate(() => {
-        return document.querySelector('h1[itemprop="name"]').innerText;
+        return document.querySelector('h1[itemprop="name"]')?.innerText;
     });
     const price = await page.evaluate(() => {
         const specialPriceElement = document.querySelector(".price-box .special-price .price");
