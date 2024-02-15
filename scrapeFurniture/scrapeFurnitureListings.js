@@ -148,11 +148,11 @@ const getBasicProductInfo = async (page) => {
     });
 
     return {
-        title: productDetails.name,
+        title: `"${productDetails.name}"`,
         supplierProductId: productDetails.id,
         price: productDetails.price,
-        brand: productDetails.brand,
-        currency: currencyCode,
+        brand: `"${productDetails.brand}"`,
+        currency: `"${currencyCode}"`,
     };
 };
 
