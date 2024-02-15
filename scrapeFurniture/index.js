@@ -32,7 +32,6 @@ const startWorker = (workerData) => {
             writeToCsv({
                 data: data.data,
                 category: data.category,
-                category: `test-${workerData.category}`,
                 columns: TABLE_COLUMNS,
                 folderName: "productDetails",
                 toUpdateProgress: true,
