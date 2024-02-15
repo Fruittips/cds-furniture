@@ -30,7 +30,7 @@ const TABLE_COLUMNS = [
  */
 (async () => {
     const browser = await puppeteer.launch({
-        headless: false,
+        // headless: false,
         args: [
             `--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/119.0`,
             "--no-sandbox",
