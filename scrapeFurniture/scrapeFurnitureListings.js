@@ -61,7 +61,7 @@ const TABLE_COLUMNS = [
                 continue;
             }
 
-            await page.goto(testUrl, {
+            await page.goto(url, {
                 waitUntil: `networkidle0`,
                 timeout: 0,
             });
