@@ -63,10 +63,18 @@ const TABLE_COLUMNS = [
                 continue;
             }
 
-            await page.goto(url, {
-                waitUntil: `networkidle0`,
-                timeout: 0,
-            });
+            try {
+                const success = await gotoWithRetry(page, url, 3); //retry going to the page 3 times
+                if (!success) {
+                    console.log(`\x1b[31mFailed to load page after retries: ${url}\x1b[0m`);
+                    continue;
+                }
+            } catch (error) {
+                console.log(
+                    `\x1b[31mGiving up on ${url} after retries due to error: ${error.message}\x1b[0m`
+                );
+                continue;
+            }
 
             //check if page is found
             const notFound = await page.evaluate(() => {
@@ -300,4 +308,16 @@ const getColours = async (page) => {
     }
 
     return colours;
+};
+
+const gotoWithRetry = async (page, url, maxAttempts = 3) => {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            await page.goto(url, { waitUntil: "networkidle0", timeout: 0 });
+            return true;
+        } catch (error) {
+            console.log(`Attempt ${attempt} failed for ${url}: ${error.message}`);
+            if (attempt === maxAttempts) throw error;
+        }
+    }
 };
