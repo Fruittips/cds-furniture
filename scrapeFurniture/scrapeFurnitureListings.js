@@ -51,9 +51,8 @@ const TABLE_COLUMNS = [
             category: category,
         });
 
-        const processedUrls = initProcessedUrls(category);
-
         let counter = 0;
+        const processedUrls = initProcessedUrls(category);
         for (const furniture of furnitureListings) {
             const url = furniture.url;
 
@@ -62,10 +61,21 @@ const TABLE_COLUMNS = [
                 continue;
             }
 
-            await page.goto(url, {
+            await page.goto(testUrl, {
                 waitUntil: `networkidle0`,
                 timeout: 0,
             });
+
+            //check if page is found
+            const notFound = await page.evaluate(() => {
+                notFoundElement = document.querySelector("title").innerText;
+                return notFoundElement.includes("404 Not Found");
+            });
+
+            if (notFound) {
+                console.log(`Page not found: ${url}`);
+                continue;
+            }
 
             const basicProductInfo = await getBasicProductInfo(page);
             const description = await getProductDescription(page);
