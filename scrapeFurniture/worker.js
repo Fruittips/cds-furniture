@@ -142,7 +142,9 @@ const getBasicProductInfo = async (page) => {
 
     /* fallback if productDetails is empty */
     const title = await page.evaluate(() => {
-        return document.querySelector('h1[itemprop="name"]')?.innerText;
+        return document.querySelector('h1[itemprop="name"]')
+            ? document.querySelector('h1[itemprop="name"]').innerText
+            : "";
     });
     const price = await page.evaluate(() => {
         const specialPriceElement = document.querySelector(".price-box .special-price .price");
@@ -196,7 +198,9 @@ const getProductColourAndId = async (page, specifications) => {
     if (!colour) {
         const colourText = await page.evaluate(() => {
             const colourRegex = /\(([^)]+)\)/; // Matches text inside parentheses
-            const title = document.querySelector('h1[itemprop="name"]').innerText;
+            const title = document.querySelector('h1[itemprop="name"]')
+                ? document.querySelector('h1[itemprop="name"]').innerText
+                : "";
             const matches = title.match(colourRegex);
             return matches ? matches[1] : null;
         });
