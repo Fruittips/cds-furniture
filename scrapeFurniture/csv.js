@@ -1,14 +1,16 @@
 const fs = require("fs");
 const path = require("path");
 const { parse } = require("csv");
+const { updateProgress } = require("./processUrls");
 
 /**
- * @param {Object} data - data to write to the csv
+ * @param {Object[]} data - data to write to the csv
  * @param {string} category
  * @param {string[]} columns - column headers
  * @param {string} folderName
+ * @param {boolean} toUpdateProgress
  */
-const writeToCsv = async ({ data, category, columns, folderName }) => {
+const writeToCsv = async ({ data, category, columns, folderName, toUpdateProgress }) => {
     const dirPath = path.join(__dirname, folderName, category);
 
     // create folder if it doesnt exist
@@ -18,28 +20,42 @@ const writeToCsv = async ({ data, category, columns, folderName }) => {
 
     const csvFilePath = path.join(dirPath, `${category}.csv`);
 
-    // Create the CSV file with the table column headers if .csv file doesnt exist
+    // create csv file with the table column headers if .csv file doesnt exist
     if (!fs.existsSync(csvFilePath)) {
         const headers = columns.join(",") + "\n";
         fs.writeFileSync(csvFilePath, headers);
     }
 
-    const productRow =
-        columns
-            .map((col) => {
-                if (Array.isArray(data[col])) {
-                    return `"${JSON.stringify(data[col]).replace(/"/g, '""')}"`;
-                }
+    let csvBuffer = "";
+    const completedUrls = [];
 
-                if (typeof data[col] === "object" && data[col] !== null) {
-                    return `"${JSON.stringify(data[col]).replace(/"/g, '""')}"`;
-                }
+    data.forEach((item) => {
+        const productRow =
+            columns
+                .map((col) => {
+                    if (Array.isArray(item[col])) {
+                        return `"${JSON.stringify(item[col]).replace(/"/g, '""')}"`;
+                    }
 
-                return data[col] || "";
-            })
-            .join(",") + "\n";
+                    if (typeof item[col] === "object" && item[col] !== null) {
+                        return `"${JSON.stringify(item[col]).replace(/"/g, '""')}"`;
+                    }
 
-    fs.appendFileSync(csvFilePath, productRow);
+                    return `"${(item[col] || "").toString().replace(/"/g, '""')}"`;
+                })
+                .join(",") + "\n";
+
+        if (toUpdateProgress) {
+            completedUrls.push(item.url);
+        }
+
+        csvBuffer += productRow;
+    });
+
+    fs.appendFileSync(csvFilePath, csvBuffer);
+    if (toUpdateProgress) {
+        updateProgress(completedUrls, category);
+    }
 };
 
 /**

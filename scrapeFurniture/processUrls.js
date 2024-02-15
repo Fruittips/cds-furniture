@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
+const buffer = [];
 const initProcessedUrls = (category) => {
     const dirPath = path.join(__dirname, "productUrls", category, "processedUrls");
     const progressFilePath = path.join(dirPath, "processedUrls.txt");
@@ -24,7 +25,7 @@ const initProcessedUrls = (category) => {
     return processedUrls;
 };
 
-function updateProgress(url, category) {
+function updateProgress(urls, category) {
     const progressFilePath = path.join(
         __dirname,
         "productUrls",
@@ -32,7 +33,14 @@ function updateProgress(url, category) {
         "processedUrls",
         "processedUrls.txt"
     );
-    fs.appendFileSync(progressFilePath, url + "\n");
+
+    const dirName = path.dirname(progressFilePath);
+    if (!fs.existsSync(dirName)) {
+        fs.mkdirSync(dirName, { recursive: true });
+    }
+
+    const urlsString = urls.join("\n") + "\n";
+    fs.appendFileSync(progressFilePath, urlsString);
 }
 
 module.exports = {

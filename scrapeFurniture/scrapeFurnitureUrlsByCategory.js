@@ -59,16 +59,18 @@ const urlParams = "dir=desc&limit=180&order=created_at"; //show 180 items per pa
 
             const moreProductUrls = await scrollAndGetProductUrls(page);
             moreProductUrls.forEach(async (url) => {
-                await writeToCsv({
-                    data: {
+                await writeToCsv([
+                    {
+                        data: {
+                            category: "beds",
+                            subcategory: subCategoryKey,
+                            url,
+                        },
                         category: "beds",
-                        subcategory: subCategoryKey,
-                        url,
+                        columns: TABLE_COLUMNS,
+                        folderName: "productUrls",
                     },
-                    category: "beds",
-                    columns: TABLE_COLUMNS,
-                    folderName: "productUrls",
-                });
+                ]);
             });
             nextPageButton = await page.$(".next.i-next");
         }
