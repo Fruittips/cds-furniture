@@ -90,23 +90,8 @@ const SUBCATEGORY = {
     storage: STORAGE_URLS,
 };
 
-const PRODUCT_URLS_COLUMNS = ["category", "subcategory", "url"];
-
-const PRODUCT_COLUMNS = [
-    "category",
-    "subcategory",
-    "product_code",
-    "name",
-    "model",
-    "price",
-    "url",
-    "image_urls",
-];
-
 module.exports = {
     CATEGORY,
     SUBCATEGORY,
-    PRODUCT_URLS_COLUMNS,
-    PRODUCT_COLUMNS,
     SOFA_42_TO_CATEGORY_L2_MAPPING,
 };

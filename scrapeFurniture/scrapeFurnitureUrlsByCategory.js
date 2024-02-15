@@ -1,13 +1,9 @@
 const puppeteer = require("puppeteer");
 
-const {
-    SUBCATEGORY,
-    TABLE_COLUMNS,
-    SOFA_CATEGORY_L2_MAPPING,
-    PRODUCT_URLS_COLUMNS,
-} = require("./constants");
+const { SUBCATEGORY } = require("./constants");
 const { writeToCsv } = require("./csv");
 
+const TABLE_COLUMNS = ["category", "subcategory", "url"];
 const urlParams = "dir=desc&limit=180&order=created_at"; //show 180 items per page and sort by created_at
 
 (async () => {
@@ -46,7 +42,7 @@ const urlParams = "dir=desc&limit=180&order=created_at"; //show 180 items per pa
                     url,
                 },
                 category: "beds",
-                columns: PRODUCT_URLS_COLUMNS,
+                columns: TABLE_COLUMNS,
                 folderName: "productUrls",
             });
         });
@@ -70,7 +66,7 @@ const urlParams = "dir=desc&limit=180&order=created_at"; //show 180 items per pa
                         url,
                     },
                     category: "beds",
-                    columns: PRODUCT_URLS_COLUMNS,
+                    columns: TABLE_COLUMNS,
                     folderName: "productUrls",
                 });
             });

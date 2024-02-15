@@ -1,6 +1,20 @@
 const puppeteer = require("puppeteer");
-const { readCsv } = require("./csv");
+const { readCsv, writeToCsv } = require("./csv");
 const { CATEGORY } = require("./constants");
+
+const TABLE_COLUMNS = [
+    "title",
+    "brand",
+    "product_id",
+    "supplier_product_id",
+    "specifications",
+    "price",
+    "colour",
+    "colours",
+    "image_urls",
+    "lifestyle_image_urls",
+    "description",
+];
 /**
  * each csv record has this following structure:
  *  {
@@ -43,28 +57,37 @@ const { CATEGORY } = require("./constants");
             });
 
             const basicProductInfo = await getBasicProductInfo(page);
+            const description = await getProductDescription(page);
             const { images, lifestyleImages } = await getProductImages(page);
             const colours = await getColours(page);
             const specifications = await getSpecifications(page);
             const { productId, colour } = await getProductColourAndId(page, specifications);
 
-            console.log("colours", colours);
-            console.log("images", images);
+            const productRowData = {
+                title: basicProductInfo.title,
+                brand: basicProductInfo.brand,
+                product_id: productId,
+                supplier_product_id: basicProductInfo.supplierProductId,
+                specifications: JSON.stringify(specifications),
+                price: basicProductInfo.price,
+                colour: colour,
+                colours: JSON.stringify(colours),
+                image_urls: images,
+                lifestyle_image_urls: lifestyleImages,
+                description: description,
+            };
 
-            /* TODO: trim by underscores */
-            let x = null;
-            if (colours) {
-                Object.keys(colours).forEach((colourKey) => {
-                    const colourData = colours[colourKey];
-                    const imageUrl = colourData.imageUrl;
+            writeToCsv({
+                data: productRowData,
+                category: category,
+                columns: TABLE_COLUMNS,
+                folderName: "productDetails",
+            });
 
-                    if (images.includes(imageUrl)) {
-                        x = colourData.productId;
-                    }
-                });
-            }
-            console.log("x", x);
+            console.count(`Scraped product: ${basicProductInfo.title}`);
         }
+
+        console.log(`Scraped all products in category: ${category}`);
         return;
     }
 
@@ -87,6 +110,29 @@ const getBasicProductInfo = async (page) => {
         price: productDetails.price,
         brand: productDetails.brand,
     };
+};
+
+const getProductDescription = async (page) => {
+    const description = await page.evaluate(() => {
+        const descriptionElement = document.querySelector("div[itemprop='description']");
+        return descriptionElement ? descriptionElement.innerText : null;
+    });
+
+    // Trim leading and trailing whitespace
+    let cleanedDesc = description.trim();
+
+    // Replace internal newlines with spaces (or another suitable placeholder)
+    cleanedDesc = cleanedDesc.replace(/\n+/g, "\n");
+
+    // Escape double quotes by doubling them
+    cleanedDesc = cleanedDesc.replace(/"/g, '""');
+
+    // If the text contains commas or double quotes, enclose the whole field in double quotes
+    if (cleanedDesc.includes(",") || cleanedDesc.includes('"')) {
+        cleanedDesc = `"${cleanedDesc}"`;
+    }
+
+    return cleanedDesc;
 };
 
 const getProductColourAndId = async (page, specifications) => {
