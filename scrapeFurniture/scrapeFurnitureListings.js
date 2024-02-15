@@ -122,7 +122,6 @@ const TABLE_COLUMNS = [
             updateProgress(url, category);
             counter++;
             console.log(`[${counter}] Scraped product: ${basicProductInfo.title} (${url})`);
-            return;
         }
 
         counter = 0;
