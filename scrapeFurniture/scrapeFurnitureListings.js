@@ -6,6 +6,8 @@ const { CATEGORY } = require("./constants");
 const TABLE_COLUMNS = [
     "title",
     "url",
+    "category",
+    "subcategory",
     "brand",
     "product_id",
     "supplier_product_id",
@@ -87,6 +89,8 @@ const TABLE_COLUMNS = [
             const productRowData = {
                 title: basicProductInfo.title,
                 url: url,
+                category: category,
+                subcategory: furniture.subcategory,
                 brand: basicProductInfo.brand,
                 product_id: productId,
                 supplier_product_id: basicProductInfo.supplierProductId,
