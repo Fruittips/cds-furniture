@@ -30,7 +30,7 @@ const TABLE_COLUMNS = [
  */
 (async () => {
     const browser = await puppeteer.launch({
-        // headless: false,
+        headless: false,
         args: [
             `--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/119.0`,
             "--no-sandbox",
@@ -313,7 +313,7 @@ const getColours = async (page) => {
 const gotoWithRetry = async (page, url, maxAttempts = 3) => {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
-            await page.goto(url, { waitUntil: "networkidle0", timeout: 0 });
+            await page.goto(url, { waitUntil: "networkidle0", timeout: 30000 });
             return true;
         } catch (error) {
             console.log(`Attempt ${attempt} failed for ${url}: ${error.message}`);
