@@ -20,6 +20,7 @@ const TABLE_COLUMNS = [
     "colours",
     "description",
 ];
+
 /**
  * each csv record has this following structure:
  *  {
@@ -164,11 +165,10 @@ const getProductDescription = async (page) => {
 
     if (!description) return "";
 
-    let cleanedDesc = description.replace(/\n+/g, " ").trim();
-
-    // Escape double quotes by doubling them
-    cleanedDesc = description.replace(/"/g, '""');
-    cleanedDesc = description.replace(/^\s*[\r\n]/gm, "");
+    let cleanedDesc = description
+        .replace(/\s*[\r\n]+/g, " ") // Replace newlines with a space
+        .trim() // Trim leading and trailing whitespace
+        .replace(/"/g, '""'); // Escape double quotes by doubling them
 
     return `"${cleanedDesc}"`;
 };
@@ -289,17 +289,21 @@ const getColours = async (page) => {
         return jsonData;
     });
 
+    /* TODO: fix colours!! */
+
     let colours = null;
     if (productImagesData) {
-        colours = {};
         const { option_labels } = productImagesData;
-        Object.keys(option_labels).forEach((colourKey) => {
-            const variation = option_labels[colourKey];
-            colours[colourKey] = {
-                productId: variation.products[0],
-                imageUrl: variation.configurable_product.base_image,
-            };
-        });
+        if (option_labels) {
+            colours = {};
+            Object.keys(option_labels).forEach((colourKey) => {
+                const variation = option_labels[colourKey];
+                colours[colourKey] = {
+                    productId: variation.products[0],
+                    imageUrl: variation.configurable_product.base_image,
+                };
+            });
+        }
     }
 
     return colours;
