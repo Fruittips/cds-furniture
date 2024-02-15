@@ -272,7 +272,6 @@ const getProductImages = async (page) => {
  */
 const getColours = async (page) => {
     const productImagesData = await page.evaluate(() => {
-        // Find the script tag by its content, assuming this snippet is unique enough
         const scriptTags = Array.from(document.querySelectorAll("script"));
         let jsonData = null;
 
