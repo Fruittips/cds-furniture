@@ -1,5 +1,6 @@
 const puppeteer = require("puppeteer");
 const { readCsv, writeToCsv } = require("./csv");
+const { initProcessedUrls, updateProgress } = require("./processUrls");
 const { CATEGORY } = require("./constants");
 
 const TABLE_COLUMNS = [
@@ -50,9 +51,16 @@ const TABLE_COLUMNS = [
             category: category,
         });
 
+        const processedUrls = initProcessedUrls(category);
+
         let counter = 0;
         for (const furniture of furnitureListings) {
             const url = furniture.url;
+
+            if (processedUrls.has(url)) {
+                console.log(`Skipping processed URL: ${url}`);
+                continue;
+            }
 
             await page.goto(url, {
                 waitUntil: `networkidle0`,
@@ -89,6 +97,7 @@ const TABLE_COLUMNS = [
                 folderName: "productDetails",
             });
 
+            updateProgress(url, category);
             counter++;
             console.log(`[${counter}] Scraped product: ${basicProductInfo.title}`);
         }
