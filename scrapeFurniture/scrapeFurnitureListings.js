@@ -64,7 +64,7 @@ const TABLE_COLUMNS = [
             }
 
             try {
-                const success = await gotoWithRetry(page, url, 3); //retry going to the page 3 times
+                const success = await gotoWithRetry(page, testUrl, 3); //retry going to the page 3 times
                 if (!success) {
                     console.log(`\x1b[31mFailed to load page after retries: ${url}\x1b[0m`);
                     continue;
@@ -122,6 +122,7 @@ const TABLE_COLUMNS = [
             updateProgress(url, category);
             counter++;
             console.log(`[${counter}] Scraped product: ${basicProductInfo.title} (${url})`);
+            return;
         }
 
         counter = 0;
@@ -162,19 +163,15 @@ const getProductDescription = async (page) => {
         return descriptionElement ? descriptionElement.innerText : null;
     });
 
-    let cleanedDesc = description.trim();
+    if (!description) return "";
 
-    cleanedDesc = cleanedDesc.replace(/\n+/g, "\n");
+    let cleanedDesc = description.replace(/\n+/g, " ").trim();
 
     // Escape double quotes by doubling them
-    cleanedDesc = cleanedDesc.replace(/"/g, '""');
+    cleanedDesc = description.replace(/"/g, '""');
+    cleanedDesc = description.replace(/^\s*[\r\n]/gm, "");
 
-    // If text contains commas or double quotes, enclose the whole field in double quotes
-    if (cleanedDesc.includes(",") || cleanedDesc.includes('"')) {
-        cleanedDesc = `"${cleanedDesc}"`;
-    }
-
-    return cleanedDesc;
+    return `"${cleanedDesc}"`;
 };
 
 const getProductColourAndId = async (page, specifications) => {
