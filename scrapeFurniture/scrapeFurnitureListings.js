@@ -154,16 +154,14 @@ const getProductDescription = async (page) => {
         return descriptionElement ? descriptionElement.innerText : null;
     });
 
-    // Trim leading and trailing whitespace
     let cleanedDesc = description.trim();
 
-    // Replace internal newlines with spaces (or another suitable placeholder)
     cleanedDesc = cleanedDesc.replace(/\n+/g, "\n");
 
     // Escape double quotes by doubling them
     cleanedDesc = cleanedDesc.replace(/"/g, '""');
 
-    // If the text contains commas or double quotes, enclose the whole field in double quotes
+    // If text contains commas or double quotes, enclose the whole field in double quotes
     if (cleanedDesc.includes(",") || cleanedDesc.includes('"')) {
         cleanedDesc = `"${cleanedDesc}"`;
     }
