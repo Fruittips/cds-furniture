@@ -10,7 +10,7 @@ const simulateHumanMouseMovement = async (page) => {
         currentY += (targetY - currentY) / 10 + Math.floor(Math.random() * 5 - 2);
 
         await page.mouse.move(currentX, currentY);
-        await page.waitForTimeout(50);
+        await sleep(50);
     }
 };
 
@@ -18,13 +18,15 @@ const simulateHumanScrolling = async (page) => {
     await page.evaluate(() => {
         window.scrollBy(0, window.innerHeight + Math.floor(Math.random() * 100 - 50));
     });
-    await page.waitForTimeout(1000);
+    await sleep(1000);
 };
 
 const simulateBrowsing = async (page) => {
     await simulateHumanMouseMovement(page);
     await simulateHumanScrolling(page);
 };
+
+const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 
 module.exports = {
     simulateBrowsing,
