@@ -15,7 +15,7 @@ const buffer = [];
  */
 const scrape = async ({ category }) => {
     const browser = await puppeteer.launch({
-        // headless: false,
+        headless: false,
         args: [
             `--user-agent=${getRandomUserAgent()}`,
             "--no-sandbox",
@@ -100,6 +100,8 @@ const scrape = async ({ category }) => {
             parentPort.postMessage({ data: buffer, category: category });
             buffer.length = 0;
         }
+
+        console.log(`Scraped product: ${basicProductInfo.title} (${url})`);
     }
 
     if (buffer.length > 0) {
@@ -353,7 +355,7 @@ const getColours = async (page) => {
 const gotoWithRetry = async (page, url, maxAttempts = 3) => {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
-            await page.goto(url, { waitUntil: "networkidle0", timeout: 10000 });
+            await page.goto(url, { waitUntil: "networkidle0", timeout: 30000 });
             return true;
         } catch (error) {
             console.log(`Attempt ${attempt} failed for ${url}: ${error.message}`);
