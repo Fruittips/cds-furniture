@@ -1,6 +1,7 @@
 const puppeteer = require("puppeteer");
 const { parentPort, workerData } = require("worker_threads");
 const { initProcessedUrls } = require("./processUrls");
+const { simulateBrowsing } = require("./simulateBrowsing");
 const { readCsv } = require("./csv");
 
 let browser;
@@ -63,19 +64,17 @@ const scrape = async ({ category }) => {
                 continue;
             }
 
-            await scrollAndGetProductUrls(page);
+            await simulateBrowsing(page);
 
-
-            const captcha = await page.evaluate(()=>{
-                const captcha = document.querySelector('div[id="challenge-stage"]')
-                return captcha
-            })
+            const captcha = await page.evaluate(() => {
+                const captcha = document.querySelector('div[id="challenge-stage"]');
+                return captcha;
+            });
             if (captcha) {
                 console.log(`\x1b[31mCAPTCHA: ${url}\x1b[0m`);
                 await closeBrowser();
                 return;
             }
-
 
             //check if page is found
             const notFound = await page.evaluate(() => {
@@ -377,7 +376,6 @@ const getColours = async (page) => {
 };
 
 const gotoWithRetry = async (page, url, maxAttempts = 3) => {
-
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
             await page.goto(url, { waitUntil: "networkidle0", timeout: 30000 });
@@ -387,27 +385,6 @@ const gotoWithRetry = async (page, url, maxAttempts = 3) => {
             if (attempt === maxAttempts) throw error;
         }
     }
-};
-
-const scrollAndGetProductUrls = async (page) => {
-    await page.evaluate(async () => {
-        await new Promise((resolve, reject) => {
-            let totalHeight = 0;
-            const distance = 50;
-            const timer = setInterval(() => {
-                const scrollHeight = document.body.scrollHeight;
-                window.scrollBy(0, distance);
-                totalHeight += distance;
-
-                if (totalHeight >= scrollHeight) {
-                    clearInterval(timer);
-                    resolve();
-                }
-            }, 50);
-        });
-    });
-
-    await new Promise(r => setTimeout(r, 3000));
 };
 
 const closeBrowser = async () => {
