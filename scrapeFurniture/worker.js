@@ -3,6 +3,7 @@ const { parentPort, workerData } = require("worker_threads");
 const { initProcessedUrls } = require("./processUrls");
 const { readCsv } = require("./csv");
 
+let browser;
 const buffer = [];
 
 /**
@@ -14,7 +15,7 @@ const buffer = [];
  *  }
  */
 const scrape = async ({ category }) => {
-    const browser = await puppeteer.launch({
+    browser = await puppeteer.launch({
         headless: false,
         args: [
             `--user-agent=${getRandomUserAgent()}`,
@@ -23,94 +24,121 @@ const scrape = async ({ category }) => {
             "--disable-dev-shm-usage",
             "--lang=en-US,en;q=0.9",
         ],
+        handleSIGINT: true,
+
         // slowMo: 250, //TODO: disable after testing
     });
-    const page = await browser.newPage();
+    try {
+        const page = await browser.newPage();
 
-    /* to prevent captchas on every new page */
-    await page.evaluateOnNewDocument(() => {
-        delete navigator.__proto__.webdriver;
-    });
-
-    const furnitureListings = await readCsv({
-        folderName: "productUrls",
-        category: category,
-    });
-
-    const processedUrls = initProcessedUrls(category);
-    for (const furniture of furnitureListings) {
-        const url = furniture.url;
-
-        if (processedUrls.has(url)) {
-            console.log(`Skipping processed URL: ${url}`);
-            continue;
-        }
-
-        try {
-            const success = await gotoWithRetry(page, url, 3); //retry going to the page 3 times
-            if (!success) {
-                console.log(`\x1b[31mFailed to load page after retries: ${url}\x1b[0m`);
-                continue;
-            }
-        } catch (error) {
-            console.log(
-                `\x1b[31mGiving up on ${url} after retries due to error: ${error.message}\x1b[0m`
-            );
-            continue;
-        }
-
-        //check if page is found
-        const notFound = await page.evaluate(() => {
-            notFoundElement = document.querySelector("title").innerText;
-            return notFoundElement.includes("404 Not Found");
+        /* to prevent captchas on every new page */
+        await page.evaluateOnNewDocument(() => {
+            delete navigator.__proto__.webdriver;
         });
 
-        if (notFound) {
-            console.log(`Page not found: ${url}`);
-            continue;
+        const furnitureListings = await readCsv({
+            folderName: "productUrls",
+            category: category,
+        });
+
+        const processedUrls = initProcessedUrls(category);
+        for (const furniture of furnitureListings) {
+            const url = furniture.url;
+
+            if (processedUrls.has(url)) {
+                console.log(`Skipping processed URL: ${url}`);
+                continue;
+            }
+
+            try {
+                const success = await gotoWithRetry(page, url, 3); //retry going to the page 3 times
+                if (!success) {
+                    console.log(`\x1b[31mFailed to load page after retries: ${url}\x1b[0m`);
+                    continue;
+                }
+            } catch (error) {
+                console.log(
+                    `\x1b[31mGiving up on ${url} after retries due to error: ${error.message}\x1b[0m`
+                );
+                continue;
+            }
+
+            await scrollAndGetProductUrls(page);
+
+            try {
+                await page.waitForFunction(
+                    () => {
+                        return (
+                            document.querySelector("title") &&
+                            !document.title.includes("404 Not Found")
+                        );
+                    },
+                    { timeout: 5000 }
+                );
+            } catch (error) {
+                console.log(`\x1b[31mPage not found: ${url}\x1b[0m`);
+                continue;
+            }
+
+            //check if page is found
+            const notFound = await page.evaluate(() => {
+                notFoundElement = document.querySelector("title").innerText;
+                return notFoundElement.includes("404 Not Found");
+            });
+
+            if (notFound) {
+                console.log(`\x1b[31mPage not found: ${url}\x1b[0m`);
+                continue;
+            }
+
+            const basicProductInfo = await getBasicProductInfo(page);
+            const description = await getProductDescription(page);
+            const { images, lifestyleImages } = await getProductImages(page);
+            const colours = await getColours(page);
+            const specifications = await getSpecifications(page);
+            const { productId, colour } = await getProductColourAndId(page, specifications);
+
+            const productRowData = {
+                title: basicProductInfo.title,
+                url: url,
+                category: category,
+                subcategory: furniture.subcategory,
+                brand: basicProductInfo.brand,
+                product_id: productId,
+                supplier_product_id: basicProductInfo.supplierProductId,
+                price: basicProductInfo.price,
+                currency: basicProductInfo.currency,
+                image_urls: images,
+                lifestyle_image_urls: lifestyleImages,
+                specifications: specifications,
+                colour: colour,
+                colours: colours,
+                description: description,
+            };
+
+            buffer.push(productRowData);
+            if (buffer.length >= 50) {
+                parentPort.postMessage({ data: buffer, category: category });
+                buffer.length = 0;
+            }
+
+            console.log(`Scraped product: ${basicProductInfo.title} (${url})`);
         }
 
-        const basicProductInfo = await getBasicProductInfo(page);
-        const description = await getProductDescription(page);
-        const { images, lifestyleImages } = await getProductImages(page);
-        const colours = await getColours(page);
-        const specifications = await getSpecifications(page);
-        const { productId, colour } = await getProductColourAndId(page, specifications);
-
-        const productRowData = {
-            title: basicProductInfo.title,
-            url: url,
-            category: category,
-            subcategory: furniture.subcategory,
-            brand: basicProductInfo.brand,
-            product_id: productId,
-            supplier_product_id: basicProductInfo.supplierProductId,
-            price: basicProductInfo.price,
-            currency: basicProductInfo.currency,
-            image_urls: images,
-            lifestyle_image_urls: lifestyleImages,
-            specifications: specifications,
-            colour: colour,
-            colours: colours,
-            description: description,
-        };
-
-        buffer.push(productRowData);
-        if (buffer.length >= 50) {
+        if (buffer.length > 0) {
             parentPort.postMessage({ data: buffer, category: category });
             buffer.length = 0;
         }
 
-        console.log(`Scraped product: ${basicProductInfo.title} (${url})`);
+        console.log(`Scraped all products in category: ${category}`);
+        await closeBrowser();
+    } catch (error) {
+        console.log(`Error in worker: ${error.message}`);
+    } finally {
+        if (browser) {
+            await closeBrowser();
+        }
     }
-
-    if (buffer.length > 0) {
-        parentPort.postMessage({ data: buffer, category: category });
-        buffer.length = 0;
-    }
-
-    console.log(`Scraped all products in category: ${category}`);
-    await browser.close();
 };
 scrape(workerData);
 
@@ -361,5 +389,33 @@ const gotoWithRetry = async (page, url, maxAttempts = 3) => {
             console.log(`Attempt ${attempt} failed for ${url}: ${error.message}`);
             if (attempt === maxAttempts) throw error;
         }
+    }
+};
+
+const scrollAndGetProductUrls = async (page) => {
+    /* TODO: probably dont need scrolling, need investigate if can delete */
+    await page.evaluate(async () => {
+        await new Promise((resolve, reject) => {
+            let totalHeight = 0;
+            const distance = 200;
+            const timer = setInterval(() => {
+                const scrollHeight = document.body.scrollHeight;
+                window.scrollBy(0, distance);
+                totalHeight += distance;
+
+                if (totalHeight >= scrollHeight) {
+                    clearInterval(timer);
+                    resolve();
+                }
+            }, 50);
+        });
+    });
+};
+
+const closeBrowser = async () => {
+    if (browser) {
+        console.log("Closing browser...");
+        await browser.close();
+        console.log("Browser closed.");
     }
 };
