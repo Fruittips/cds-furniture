@@ -1,7 +1,7 @@
 const puppeteer = require("puppeteer");
 const { parentPort, workerData } = require("worker_threads");
 const { initProcessedUrls } = require("./processUrls");
-const { simulateBrowsing } = require("./simulateBrowsing");
+const { browse } = require("./browse");
 const { readCsv } = require("./csv");
 
 let browser;
@@ -93,7 +93,7 @@ const scrape = async ({ category }) => {
                 continue;
             }
 
-            await simulateBrowsing(page);
+            await browse(page);
 
             const basicProductInfo = await getBasicProductInfo(page);
             const description = await getProductDescription(page);
