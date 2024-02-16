@@ -397,7 +397,7 @@ const scrollAndGetProductUrls = async (page) => {
     await page.evaluate(async () => {
         await new Promise((resolve, reject) => {
             let totalHeight = 0;
-            const distance = 200;
+            const distance = 50;
             const timer = setInterval(() => {
                 const scrollHeight = document.body.scrollHeight;
                 window.scrollBy(0, distance);
