@@ -30,7 +30,7 @@ const scrape = async ({ category }) => {
     try {
         const page = await browser.newPage();
 
-        /* to prevent captchas on every new page */
+        /* to help prevent captchas on every new page */
         await page.evaluateOnNewDocument(() => {
             delete navigator.__proto__.webdriver;
         });
@@ -63,9 +63,16 @@ const scrape = async ({ category }) => {
                 continue;
             }
 
-            await scrollAndGetProductUrls(page);
 
+            //check if redirected back to home page, then navigate back to original url?
+            const currentUrl = page.url()
+            if (currentUrl === "https://www.fortytwo.sg/") {
+                console.log(`\x1b[31mRedirected home from ${url}\x1b[0m`);
+                await closeBrowser()
+                return;
+            }
 
+            //check for captcha
             const captcha = await page.evaluate(()=>{
                 const captcha = document.querySelector('div[id="challenge-stage"]')
                 return captcha
@@ -76,7 +83,6 @@ const scrape = async ({ category }) => {
                 return;
             }
 
-
             //check if page is found
             const notFound = await page.evaluate(() => {
                 notFoundElement = document.querySelector("title").innerText;
@@ -86,6 +92,8 @@ const scrape = async ({ category }) => {
                 console.log(`\x1b[31mPage not found: ${url}\x1b[0m`);
                 continue;
             }
+
+            await scrollAndGetProductUrls(page);
 
             const basicProductInfo = await getBasicProductInfo(page);
             const description = await getProductDescription(page);
