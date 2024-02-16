@@ -25,7 +25,6 @@ const scrape = async ({ category }) => {
             "--lang=en-US,en;q=0.9",
         ],
         handleSIGINT: true,
-
         // slowMo: 250, //TODO: disable after testing
     });
     try {
@@ -51,6 +50,7 @@ const scrape = async ({ category }) => {
             }
 
             try {
+                await page.setUserAgent(getRandomUserAgent());
                 const success = await gotoWithRetry(page, url, 3); //retry going to the page 3 times
                 if (!success) {
                     console.log(`\x1b[31mFailed to load page after retries: ${url}\x1b[0m`);
@@ -65,27 +65,23 @@ const scrape = async ({ category }) => {
 
             await scrollAndGetProductUrls(page);
 
-            try {
-                await page.waitForFunction(
-                    () => {
-                        return (
-                            document.querySelector("title") &&
-                            !document.title.includes("404 Not Found")
-                        );
-                    },
-                    { timeout: 5000 }
-                );
-            } catch (error) {
-                console.log(`\x1b[31mPage not found: ${url}\x1b[0m`);
-                continue;
+
+            const captcha = await page.evaluate(()=>{
+                const captcha = document.querySelector('div[id="challenge-stage"]')
+                return captcha
+            })
+            if (captcha) {
+                console.log(`\x1b[31mCAPTCHA: ${url}\x1b[0m`);
+                await closeBrowser();
+                return;
             }
+
 
             //check if page is found
             const notFound = await page.evaluate(() => {
                 notFoundElement = document.querySelector("title").innerText;
                 return notFoundElement.includes("404 Not Found");
             });
-
             if (notFound) {
                 console.log(`\x1b[31mPage not found: ${url}\x1b[0m`);
                 continue;
@@ -381,6 +377,7 @@ const getColours = async (page) => {
 };
 
 const gotoWithRetry = async (page, url, maxAttempts = 3) => {
+
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
             await page.goto(url, { waitUntil: "networkidle0", timeout: 30000 });
@@ -393,11 +390,10 @@ const gotoWithRetry = async (page, url, maxAttempts = 3) => {
 };
 
 const scrollAndGetProductUrls = async (page) => {
-    /* TODO: probably dont need scrolling, need investigate if can delete */
     await page.evaluate(async () => {
         await new Promise((resolve, reject) => {
             let totalHeight = 0;
-            const distance = 200;
+            const distance = 50;
             const timer = setInterval(() => {
                 const scrollHeight = document.body.scrollHeight;
                 window.scrollBy(0, distance);
@@ -410,6 +406,8 @@ const scrollAndGetProductUrls = async (page) => {
             }, 50);
         });
     });
+
+    await new Promise(r => setTimeout(r, 3000));
 };
 
 const closeBrowser = async () => {
