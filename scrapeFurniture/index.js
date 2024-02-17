@@ -47,5 +47,7 @@ const startWorker = (workerData) => {
     });
 };
 
-const workers = CATEGORY.map((cat) => startWorker({ category: cat }));
+const workers = [startWorker({ category: CATEGORY[4] })];
+// const workers = CATEGORY.map((cat) => startWorker({ category: cat }));
+
 Promise.all(workers).then(() => console.log("Scraping for all furnitures completed."));

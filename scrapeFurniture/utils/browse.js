@@ -1,3 +1,5 @@
+import { sleep, shuffleArray } from "./utils.js";
+
 async function scrollDown(page) {
     await page.evaluate(() => {
         window.scrollBy(0, window.innerHeight);
@@ -41,15 +43,6 @@ const browse = async (page) => {
         await sleep(Math.random() * 2000 + 1000); // Wait for 1 to 3 seconds randomly
     }
 };
-
-const shuffleArray = (array) => {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]]; // Swap elements
-    }
-};
-
-const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 
 module.exports = {
     browse,

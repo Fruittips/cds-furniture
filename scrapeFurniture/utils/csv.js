@@ -2,6 +2,8 @@ const fs = require("fs");
 const path = require("path");
 const { parse } = require("csv");
 const { updateProgress } = require("./processUrls");
+const { shuffleArray } = require("./utils");
+const csv = require("fast-csv");
 
 /**
  * @param {Object[]} data - data to write to the csv
@@ -84,4 +86,22 @@ const readCsv = async ({ folderName, category, filterFn, csvOptions }) => {
     return records;
 };
 
-module.exports = { writeToCsv, readCsv };
+const shuffleCsv = (csvFilePath, outputFilePath) => {
+    const rows = [];
+    fs.createReadStream(csvFilePath)
+        .pipe(csv.parse({ headers: true }))
+        .on("error", (error) => console.error(error))
+        .on("data", (row) => rows.push(row))
+        .on("end", (rowCount) => {
+            console.log(`Parsed ${rowCount} rows`);
+
+            shuffleArray(rows);
+
+            const writeStream = fs.createWriteStream(outputFilePath);
+            csv.writeToStream(writeStream, rows, { headers: true })
+                .on("error", (error) => console.error(error))
+                .on("finish", () => console.log("Done writing shuffled rows to CSV."));
+        });
+};
+
+module.exports = { writeToCsv, readCsv, shuffleCsv };

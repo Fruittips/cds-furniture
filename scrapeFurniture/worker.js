@@ -1,8 +1,8 @@
 const puppeteer = require("puppeteer");
 const { parentPort, workerData } = require("worker_threads");
-const { initProcessedUrls } = require("./processUrls");
-const { browse } = require("./browse");
-const { readCsv } = require("./csv");
+const { initProcessedUrls } = require("./utils/processUrls");
+const { browse } = require("./utils/browse");
+const { readCsv } = require("./utils/csv");
 
 let browser;
 const buffer = [];
