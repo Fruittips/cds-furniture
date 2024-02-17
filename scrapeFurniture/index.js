@@ -64,7 +64,9 @@ const shuffleCsvByCategories = (categories) => {
     });
 };
 
-shuffleCsvByCategories([CATEGORY[4]]); //"storage"
-const workers = [startWorker({ category: CATEGORY[4] })];
-// const workers = CATEGORY.map((cat) => startWorker({ category: cat }));
+const categories = CATEGORY;
+shuffleCsvByCategories(categories);
+// shuffleCsvByCategories([CATEGORY[4]]); //"storage"
+// const workers = [startWorker({ category: CATEGORY[4] })];
+const workers = CATEGORY.map((cat) => startWorker({ category: cat }));
 Promise.all(workers).then(() => console.log("Scraping completed."));
