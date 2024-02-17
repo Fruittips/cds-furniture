@@ -19,22 +19,6 @@ puppeteer.use(StealthPlugin());
 const scrape = async ({ category }) => {
     const buffer = [];
 
-    let browser = await puppeteer.launch({
-        headless: false,
-        args: [
-            `--user-agent=${getRandomUserAgent()}`,
-            "--no-sandbox",
-            "--disable-setuid-sandbox",
-            "--disable-dev-shm-usage",
-            "--lang=en-US,en;q=0.9",
-        ],
-        handleSIGINT: true,
-        devTools: true,
-        // slowMo: 250, //TODO: disable after testing
-    });
-
-    const page = await browser.newPage();
-
     const furnitureListings = await readCsv({
         folderName: "productUrls",
         category: category,
@@ -50,22 +34,33 @@ const scrape = async ({ category }) => {
             continue;
         }
 
+        let browser = await puppeteer.launch({
+            headless: true,
+            args: [
+                `--user-agent=${getRandomUserAgent()}`,
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-dev-shm-usage",
+                "--lang=en-US,en;q=0.9",
+            ],
+            handleSIGINT: true,
+            // slowMo: 250, //TODO: disable after testing
+        });
+
+        const page = await browser.newPage();
+
         try {
-            const success = await gotoWithRetry(
-                page,
-                `https://webcache.googleusercontent.com/search?q=cache:${url}`,
-                3
-            );
+            const success = await gotoWithRetry(page, url, 3);
             if (!success) {
                 console.log(`\x1b[31mFailed to load page after retries: ${url}\x1b[0m`);
-                await browse(page);
-                await sleep(3000);
+                await closeBrowser(browser);
                 continue;
             }
         } catch (error) {
             console.log(
                 `\x1b[31mGiving up on ${url} after retries due to error: ${error.message}\x1b[0m`
             );
+            await closeBrowser(browser);
             continue;
         }
 
@@ -95,6 +90,7 @@ const scrape = async ({ category }) => {
             });
             if (notFound) {
                 console.log(`\x1b[31mPage not found: ${url}\x1b[0m`);
+                await closeBrowser(browser);
                 continue;
             }
 
@@ -126,7 +122,7 @@ const scrape = async ({ category }) => {
             };
 
             buffer.push(productRowData);
-            if (buffer.length >= 20) {
+            if (buffer.length >= 10) {
                 console.log("posting");
 
                 parentPort.postMessage({ data: buffer, category: category });
@@ -134,8 +130,9 @@ const scrape = async ({ category }) => {
             }
 
             console.log(`Scraped product: ${basicProductInfo.title} (${url})\x1b[0m`);
+            await closeBrowser(browser);
         } catch (error) {
-            console.log(`\x1b[31mError in worker: ${error.message}\x1b[0m`);
+            console.log(`\x1b[31mError in worker:\n${error.message}\x1b[0m`);
             if (browser) {
                 await closeBrowser(browser);
                 return;
@@ -149,7 +146,6 @@ const scrape = async ({ category }) => {
     }
 
     console.log(`\x1b[32mScraped all products in category: ${category}\x1b[0m`);
-    await closeBrowser(browser);
 };
 scrape(workerData);
 
