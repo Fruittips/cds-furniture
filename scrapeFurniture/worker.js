@@ -35,7 +35,7 @@ const scrape = async ({ category }) => {
         }
 
         let browser = await puppeteer.launch({
-            headless: true,
+            headless: false,
             args: [
                 `--user-agent=${getRandomUserAgent()}`,
                 "--no-sandbox",
@@ -50,7 +50,7 @@ const scrape = async ({ category }) => {
         const page = await browser.newPage();
 
         try {
-            const success = await gotoWithRetry(page, url, 3);
+            const success = await gotoWithRetry(page, url, 1);
             if (!success) {
                 console.log(`\x1b[31mFailed to load page after retries: ${url}\x1b[0m`);
                 await closeBrowser(browser);
@@ -71,7 +71,9 @@ const scrape = async ({ category }) => {
                 currentUrl === "https://www.fortytwo.sg/" ||
                 currentUrl === "https://www.fortytwo.sg"
             ) {
-                throw new Error(`Redirected home from ${url}`);
+                // throw new Error(`Redirected home from ${url}`);
+                await closeBrowser(browser);
+                continue;
             }
 
             //check for captcha
@@ -94,7 +96,6 @@ const scrape = async ({ category }) => {
                 continue;
             }
 
-            await browse(page);
 
             const basicProductInfo = await getBasicProductInfo(page);
             const description = await getProductDescription(page);
@@ -130,6 +131,8 @@ const scrape = async ({ category }) => {
             }
 
             console.log(`Scraped product: ${basicProductInfo.title} (${url})\x1b[0m`);
+
+            await browse(page);
             await closeBrowser(browser);
         } catch (error) {
             console.log(`\x1b[31mError in worker:\n${error.message}\x1b[0m`);

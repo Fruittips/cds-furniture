@@ -38,7 +38,7 @@ const gotoWithRetry = async (page, url, maxAttempts = 3) => {
             await page.setExtraHTTPHeaders({
                 referer: getRandomReferer(),
             });
-            const response = await page.goto(url, { waitUntil: "networkidle0", timeout: 15000 });
+            const response = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 20000 });
             if (response && response.status() >= 400) {
                 console.log(`\x1b[31mFailed to load page: ${response.status()}\x1b[0m`);
                 return false;
