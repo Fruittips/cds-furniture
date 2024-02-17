@@ -66,10 +66,12 @@ const writeToCsv = async ({ data, category, columns, folderName, toUpdateProgres
  * @param {Object} filterFn - function to filter the records
  * @param {Object} csvOptions - options for the csv parser
  */
-const readCsv = async ({ folderName, category, filterFn, csvOptions }) => {
+const readCsv = async ({ folderName, category, filterFn, csvOptions, shuffled=false }) => {
     const records = [];
+
+    const csvName = shuffled ? `${category}_shuffled`:`${category}`
     const parser = fs
-        .createReadStream(`${__dirname}/${folderName}/${category}/${category}.csv`)
+        .createReadStream(`${__dirname}/../${folderName}/${category}/${csvName}.csv`)
         .pipe(
             parse({
                 columns: true,

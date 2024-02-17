@@ -39,6 +39,7 @@ const scrape = async ({ category }) => {
         const furnitureListings = await readCsv({
             folderName: "productUrls",
             category: category,
+            shuffled: true
         });
 
         const processedUrls = initProcessedUrls(category);

@@ -1,4 +1,5 @@
-import { sleep, shuffleArray } from "./utils.js";
+const { sleep,shuffleArray } = require("./utils");
+
 
 async function scrollDown(page) {
     await page.evaluate(() => {
@@ -42,6 +43,8 @@ const browse = async (page) => {
         await actions[i % actions.length](page); // Execute the action, cycling through actions if necessary
         await sleep(Math.random() * 2000 + 1000); // Wait for 1 to 3 seconds randomly
     }
+
+    await sleep(Math.random() * 12000 + 8000)
 };
 
 module.exports = {
