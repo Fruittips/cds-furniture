@@ -46,7 +46,10 @@ const syncFiles = (categories) => {
                 .on("error", (error) => {
                     throw new Error("Error reading CSV file for", category);
                 })
-                .pipe(csv.parse({ headers: true }))
+                .pipe(csv.parse({ 
+                    headers: true, 
+                    discardUnmappedColumns:true
+                }))
                 .on("data", (row) => {
                     if (row.title && row.title.trim() !== `""`) {
                         urlsToKeep.add(row.url);
@@ -60,7 +63,10 @@ const syncFiles = (categories) => {
 
                     const writeStream = fs.createWriteStream(tempCsvFilePath);
                     fs.createReadStream(csvFilePath)
-                        .pipe(csv.parse({ headers: true }))
+                        .pipe(csv.parse({ 
+                            headers: true,
+                            discardUnmappedColumns: true
+                        }))
                         .pipe(csv.format({ headers: true }))
                         .transform((row) => (urlsToKeep.has(row.url) ? row : null))
                         .pipe(writeStream)
