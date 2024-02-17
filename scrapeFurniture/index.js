@@ -4,6 +4,7 @@ const path = require("path");
 const { CATEGORY } = require("./constants");
 const { shuffleCsv } = require("./utils/csv");
 const { writeToCsv } = require("./utils/csv");
+const { sleep } = require("./utils/utils");
 
 const TABLE_COLUMNS = [
     "title",
@@ -23,11 +24,22 @@ const TABLE_COLUMNS = [
     "description",
 ];
 
+let workers = [];
+process.on("SIGINT", async () => {
+    console.log("SIGINT signal received. Closing all browsers...");
+
+    workers.forEach((worker) => worker.postMessage({ action: "shutdown" }));
+
+    await sleep(2000);
+    process.exit(0);
+});
+
 const startWorker = (workerData) => {
     return new Promise((resolve, reject) => {
         const worker = new Worker(path.join(__dirname, "worker.js"), {
             workerData,
         });
+        workers.push(worker);
 
         worker.on("message", (data) => {
             writeToCsv({
@@ -44,6 +56,7 @@ const startWorker = (workerData) => {
         worker.on("exit", (code) => {
             if (code !== 0) reject(new Error(`Worker stopped with exit code ${code}`));
             resolve();
+            workers = workers.filter((w) => w !== worker);
         });
     });
 };
@@ -66,7 +79,8 @@ const shuffleCsvByCategories = (categories) => {
 
 const categories = CATEGORY;
 shuffleCsvByCategories(categories);
+
 // shuffleCsvByCategories([CATEGORY[4]]); //"storage"
 // const workers = [startWorker({ category: CATEGORY[4] })];
-const workers = CATEGORY.map((cat) => startWorker({ category: cat }));
-Promise.all(workers).then(() => console.log("Scraping completed."));
+const workersProcess = categories.map((cat) => startWorker({ category: cat }));
+Promise.all(workersProcess).then(() => console.log("Scraping completed."));

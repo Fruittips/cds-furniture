@@ -5,8 +5,17 @@ const { browse } = require("./utils/browse");
 const { readCsv } = require("./utils/csv");
 const { closeBrowser, gotoWithRetry, getRandomUserAgent } = require("./utils/browserUtils");
 const StealthPlugin = require("puppeteer-extra-plugin-stealth");
-const { sleep } = require("./utils/utils");
 puppeteer.use(StealthPlugin());
+
+let browser;
+
+// ensure browser is closed and process exits when parent thread sends shutdown message
+parentPort.on("message", async (message) => {
+    if (message.action === "shutdown") {
+        await closeBrowser(browser);
+        process.exit(0);
+    }
+});
 
 /**
  * each csv record has this following structure:
@@ -34,7 +43,7 @@ const scrape = async ({ category }) => {
             continue;
         }
 
-        let browser = await puppeteer.launch({
+        browser = await puppeteer.launch({
             headless: false,
             args: [
                 `--user-agent=${getRandomUserAgent()}`,
@@ -96,7 +105,6 @@ const scrape = async ({ category }) => {
                 continue;
             }
 
-
             const basicProductInfo = await getBasicProductInfo(page);
             const description = await getProductDescription(page);
             const { images, lifestyleImages } = await getProductImages(page);
@@ -131,11 +139,10 @@ const scrape = async ({ category }) => {
             }
 
             console.log(`Scraped product: ${basicProductInfo.title} (${url})\x1b[0m`);
-
             await browse(page);
-            await closeBrowser(browser);
         } catch (error) {
             console.log(`\x1b[31mError in worker:\n${error.message}\x1b[0m`);
+        } finally {
             if (browser) {
                 await closeBrowser(browser);
                 return;
