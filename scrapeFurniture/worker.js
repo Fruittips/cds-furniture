@@ -1,11 +1,12 @@
-const puppeteer = require("puppeteer");
+const puppeteer = require("puppeteer-extra");
 const { parentPort, workerData } = require("worker_threads");
 const { initProcessedUrls } = require("./utils/processUrls");
 const { browse } = require("./utils/browse");
 const { readCsv } = require("./utils/csv");
-
-let browser;
-const buffer = [];
+const { closeBrowser, gotoWithRetry, getRandomUserAgent } = require("./utils/browserUtils");
+const StealthPlugin = require("puppeteer-extra-plugin-stealth");
+const { sleep } = require("./utils/utils");
+puppeteer.use(StealthPlugin());
 
 /**
  * each csv record has this following structure:
@@ -16,7 +17,9 @@ const buffer = [];
  *  }
  */
 const scrape = async ({ category }) => {
-    browser = await puppeteer.launch({
+    const buffer = [];
+
+    let browser = await puppeteer.launch({
         headless: false,
         args: [
             `--user-agent=${getRandomUserAgent()}`,
@@ -26,51 +29,54 @@ const scrape = async ({ category }) => {
             "--lang=en-US,en;q=0.9",
         ],
         handleSIGINT: true,
+        devTools: true,
         // slowMo: 250, //TODO: disable after testing
     });
-    try {
-        const page = await browser.newPage();
 
-        /* to help prevent captchas on every new page */
-        await page.evaluateOnNewDocument(() => {
-            delete navigator.__proto__.webdriver;
-        });
+    const page = await browser.newPage();
 
-        const furnitureListings = await readCsv({
-            folderName: "productUrls",
-            category: category,
-            shuffled: true
-        });
+    const furnitureListings = await readCsv({
+        folderName: "productUrls",
+        category: category,
+        shuffled: true,
+    });
 
-        const processedUrls = initProcessedUrls(category);
-        for (const furniture of furnitureListings) {
-            const url = furniture.url;
+    const processedUrls = initProcessedUrls(category);
+    for (const furniture of furnitureListings) {
+        const url = furniture.url;
 
-            if (processedUrls.has(url)) {
-                console.log(`Skipping processed URL: ${url}`);
+        if (processedUrls.has(url)) {
+            console.log(`Skipping processed URL: ${url}`);
+            continue;
+        }
+
+        try {
+            const success = await gotoWithRetry(
+                page,
+                `https://webcache.googleusercontent.com/search?q=cache:${url}`,
+                3
+            );
+            if (!success) {
+                console.log(`\x1b[31mFailed to load page after retries: ${url}\x1b[0m`);
+                await browse(page);
+                await sleep(3000);
                 continue;
             }
+        } catch (error) {
+            console.log(
+                `\x1b[31mGiving up on ${url} after retries due to error: ${error.message}\x1b[0m`
+            );
+            continue;
+        }
 
-            try {
-                await page.setUserAgent(getRandomUserAgent());
-                const success = await gotoWithRetry(page, url, 3);
-                if (!success) {
-                    console.log(`\x1b[31mFailed to load page after retries: ${url}\x1b[0m`);
-                    continue;
-                }
-            } catch (error) {
-                console.log(
-                    `\x1b[31mGiving up on ${url} after retries due to error: ${error.message}\x1b[0m`
-                );
-                continue;
-            }
-
-            //check if redirected back to home page, then navigate back to original url?
+        try {
+            //check if redirected back to home page
             const currentUrl = page.url();
-            if (currentUrl === "https://www.fortytwo.sg/") {
-                console.log(`\x1b[31mRedirected home from ${url}\x1b[0m`);
-                await closeBrowser();
-                return;
+            if (
+                currentUrl === "https://www.fortytwo.sg/" ||
+                currentUrl === "https://www.fortytwo.sg"
+            ) {
+                throw new Error(`Redirected home from ${url}`);
             }
 
             //check for captcha
@@ -79,9 +85,7 @@ const scrape = async ({ category }) => {
                 return captcha;
             });
             if (captcha) {
-                console.log(`\x1b[31mCAPTCHA: ${url}\x1b[0m`);
-                await closeBrowser();
-                return;
+                throw new Error(`CAPTCHA: ${url}`);
             }
 
             //check if page is found
@@ -122,42 +126,32 @@ const scrape = async ({ category }) => {
             };
 
             buffer.push(productRowData);
-            if (buffer.length >= 50) {
+            if (buffer.length >= 20) {
+                console.log("posting");
+
                 parentPort.postMessage({ data: buffer, category: category });
                 buffer.length = 0;
             }
 
-            console.log(`Scraped product: ${basicProductInfo.title} (${url})`);
-        }
-
-        if (buffer.length > 0) {
-            parentPort.postMessage({ data: buffer, category: category });
-            buffer.length = 0;
-        }
-
-        console.log(`Scraped all products in category: ${category}`);
-        await closeBrowser();
-    } catch (error) {
-        console.log(`Error in worker: ${error.message}`);
-    } finally {
-        if (browser) {
-            await closeBrowser();
+            console.log(`Scraped product: ${basicProductInfo.title} (${url})\x1b[0m`);
+        } catch (error) {
+            console.log(`\x1b[31mError in worker: ${error.message}\x1b[0m`);
+            if (browser) {
+                await closeBrowser(browser);
+                return;
+            }
         }
     }
+
+    if (buffer.length > 0) {
+        parentPort.postMessage({ data: buffer, category: category });
+        buffer.length = 0;
+    }
+
+    console.log(`\x1b[32mScraped all products in category: ${category}\x1b[0m`);
+    await closeBrowser(browser);
 };
 scrape(workerData);
-
-function getRandomUserAgent() {
-    const userAgents = [
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/119.0",
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36",
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15",
-        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.85 Safari/537.36",
-    ];
-
-    const randomIndex = Math.floor(Math.random() * userAgents.length);
-    return userAgents[randomIndex];
-}
 
 const getBasicProductInfo = async (page) => {
     const currencyCode = await page.evaluate(() => {
@@ -383,24 +377,4 @@ const getColours = async (page) => {
     }
 
     return colours;
-};
-
-const gotoWithRetry = async (page, url, maxAttempts = 3) => {
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        try {
-            await page.goto(url, { waitUntil: "networkidle0", timeout: 30000 });
-            return true;
-        } catch (error) {
-            console.log(`Attempt ${attempt} failed for ${url}: ${error.message}`);
-            if (attempt === maxAttempts) throw error;
-        }
-    }
-};
-
-const closeBrowser = async () => {
-    if (browser) {
-        console.log("Closing browser...");
-        await browser.close();
-        console.log("Browser closed.");
-    }
 };

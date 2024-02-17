@@ -1,9 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 
-const buffer = [];
 const initProcessedUrls = (category) => {
-    const dirPath = path.join(__dirname, "productUrls", category, "processedUrls");
+    const dirPath = path.join(__dirname, "..", "productUrls", category, "processedUrls");
     const progressFilePath = path.join(dirPath, "processedUrls.txt");
 
     //create folder if it doesnt exist
@@ -28,6 +27,7 @@ const initProcessedUrls = (category) => {
 function updateProgress(urls, category) {
     const progressFilePath = path.join(
         __dirname,
+        "..",
         "productUrls",
         category,
         "processedUrls",

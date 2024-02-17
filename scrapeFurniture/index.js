@@ -48,19 +48,23 @@ const startWorker = (workerData) => {
     });
 };
 
-
 const shuffleCsvByCategories = (categories) => {
     const folderName = "productUrls";
-    
-    categories.forEach(category => {
-        const csvFilePath = path.join(__dirname, folderName, category, `${category}.csv`);
-        const outputFilePath = path.join(__dirname, folderName, category, `${category}_shuffled.csv`);
-    
-        shuffleCsv(csvFilePath, outputFilePath)
-    })
-}
 
-shuffleCsvByCategories([CATEGORY[4]]) //"storage"
+    categories.forEach((category) => {
+        const csvFilePath = path.join(__dirname, folderName, category, `${category}.csv`);
+        const outputFilePath = path.join(
+            __dirname,
+            folderName,
+            category,
+            `${category}_shuffled.csv`
+        );
+
+        shuffleCsv(csvFilePath, outputFilePath);
+    });
+};
+
+shuffleCsvByCategories([CATEGORY[4]]); //"storage"
 const workers = [startWorker({ category: CATEGORY[4] })];
 // const workers = CATEGORY.map((cat) => startWorker({ category: cat }));
-Promise.all(workers).then(() => console.log("Scraping for all furnitures completed."));
+Promise.all(workers).then(() => console.log("Scraping completed."));

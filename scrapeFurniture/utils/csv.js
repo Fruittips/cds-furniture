@@ -13,7 +13,7 @@ const csv = require("fast-csv");
  * @param {boolean} toUpdateProgress
  */
 const writeToCsv = async ({ data, category, columns, folderName, toUpdateProgress }) => {
-    const dirPath = path.join(__dirname, folderName, category);
+    const dirPath = path.join(__dirname, "..", folderName, category);
 
     // create folder if it doesnt exist
     if (!fs.existsSync(dirPath)) {
@@ -66,10 +66,10 @@ const writeToCsv = async ({ data, category, columns, folderName, toUpdateProgres
  * @param {Object} filterFn - function to filter the records
  * @param {Object} csvOptions - options for the csv parser
  */
-const readCsv = async ({ folderName, category, filterFn, csvOptions, shuffled=false }) => {
+const readCsv = async ({ folderName, category, filterFn, csvOptions, shuffled = false }) => {
     const records = [];
 
-    const csvName = shuffled ? `${category}_shuffled`:`${category}`
+    const csvName = shuffled ? `${category}_shuffled` : `${category}`;
     const parser = fs
         .createReadStream(`${__dirname}/../${folderName}/${category}/${csvName}.csv`)
         .pipe(
@@ -95,14 +95,16 @@ const shuffleCsv = (csvFilePath, outputFilePath) => {
         .on("error", (error) => console.error(error))
         .on("data", (row) => rows.push(row))
         .on("end", (rowCount) => {
-            console.log(`Parsed ${rowCount} rows`);
+            console.log(`Parsed ${rowCount} rows [${csvFilePath}]`);
 
             shuffleArray(rows);
 
             const writeStream = fs.createWriteStream(outputFilePath);
             csv.writeToStream(writeStream, rows, { headers: true })
                 .on("error", (error) => console.error(error))
-                .on("finish", () => console.log("Done writing shuffled rows to CSV."));
+                .on("finish", () =>
+                    console.log(`Done writing shuffled rows to CSV. [${outputFilePath}]`)
+                );
         });
 };
 
