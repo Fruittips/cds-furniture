@@ -156,6 +156,7 @@ const scrape = async ({ category }) => {
     }
 
     console.log(`\x1b[32mScraped all products in category: ${category}\x1b[0m`);
+    process.exit(0);
 };
 scrape(workerData);
 
