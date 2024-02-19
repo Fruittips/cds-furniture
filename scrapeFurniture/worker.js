@@ -145,7 +145,7 @@ const scrape = async ({ category }) => {
         } finally {
             if (browser) {
                 await closeBrowser(browser);
-                return;
+                continue;
             }
         }
     }
