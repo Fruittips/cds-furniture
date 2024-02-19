@@ -1,4 +1,5 @@
 import concurrent.futures
+import random
 import pandas as pd
 import requests
 import os
@@ -45,40 +46,113 @@ def download_image(url, output_path):
     except Exception as e:
         print(f"Error downloading {url}: {e}")
 
-def download_images_from_csv(category):
-    dataset_path = f'../../Datasets/raw/{category}/{category}.csv'
-    output_path = f'../../Datasets/images/{category}/'
-
-    # Read the CSV file
-    df = pd.read_csv(dataset_path)
-    # Iterate through the DataFrame rows
-    for index, row in df.iterrows():
-        product_id = row['product_id']
-        subcategory = row['subcategory']
+def download_images_from_csv(category, subcategories):
+    for subcategory in subcategories:
+        output_path = f'../../Datasets/images/{category}/{subcategory}/'
         
-        subcategory_path = os.path.join(output_path, subcategory.replace('/', '-').replace(' ', '_'))
+        # Read the CSV file containing image information
+        csv_file_path = f'./{category}/{subcategory}/images_to_download_{subcategory}.csv'
+        if not os.path.isfile(csv_file_path):
+            print(f"CSV file not found for {subcategory}, skipping.")
+            continue
         
-        # For image_urls
-        if pd.notnull(row['image_urls']):
-            for i, url in enumerate(eval(row['image_urls'])):  # Assuming urls are in a list format stored as string
-                file_name = f"{product_id}_image_{i}.jpg"
-                download_image(url, os.path.join(subcategory_path, file_name))
-                time.sleep(1)
+        df_images = pd.read_csv(csv_file_path)
         
-        # For lifestyle_image_urls
-        if pd.notnull(row['lifestyle_image_urls']):
-            for i, url in enumerate(eval(row['lifestyle_image_urls'])):  # Assuming urls are in a list format stored as string
-                file_name = f"{product_id}_image_lifestyle_{i}.jpg"
-                download_image(url, os.path.join(subcategory_path, file_name))
-                time.sleep(1)
+        for index, row in df_images.iterrows():
+            url = row['image_url']
+            file_name = row['image_file_name']
+            file_path = os.path.join(output_path, file_name)
+            
+            # Create the output directory if it doesn't exist
+            os.makedirs(output_path, exist_ok=True)
+
+            # Download the image if it doesn't exist already
+            if not os.path.exists(file_path):
+                download_image(url, file_path)
+                time.sleep(1)  # Add a delay between downloads
+                
+                delay = random.uniform(1, 3)
+                time.sleep(delay)
 
 
-CATEGORIES = ['chairs', 'sofas']
+def preprocess_dataset(category, subcategories):
+    for subcategory in subcategories:
+        dataset_path = f'../../Datasets/raw/{category}/{category}.csv'
+        output_path = f'../../Datasets/images/{category}/{subcategory}/'
+        
+        os.makedirs(output_path, exist_ok=True)
+
+        if not os.path.isfile(dataset_path):
+            print(f"Dataset file not found for {subcategory}, skipping.")
+            continue
+
+        df = pd.read_csv(dataset_path)
+        images_to_download = []
+        
+        for index, row in df.iterrows():
+            image_urls = eval(row['image_urls']) if pd.notnull(row['image_urls']) else []
+            lifestyle_image_urls = eval(row['lifestyle_image_urls']) if pd.notnull(row['lifestyle_image_urls']) else []
+
+            for index, url in enumerate(image_urls):
+                file_name = f"{row['product_id']}_image_{index}.jpg"
+                file_path = os.path.join(output_path, file_name)
+                
+                if not os.path.exists(file_path):
+                    images_to_download.append((file_path, file_name, url))
+                    
+            for index, url in enumerate(lifestyle_image_urls):
+                file_name = f"{row['product_id']}_image_lifestyle_{index}.jpg"
+                file_path = os.path.join(output_path, file_name)
+                
+                if not os.path.exists(file_path):
+                    images_to_download.append((file_path, file_name, url))
+
+        csv_file_path = f'./{category}/{subcategory}/images_to_download_{subcategory}.csv'
+        os.makedirs(os.path.dirname(csv_file_path), exist_ok=True)
+        
+        # Write to CSV file
+        df_images = pd.DataFrame(images_to_download, columns=["image_file_path", "image_file_name", "image_url"])
+        df_images.to_csv(csv_file_path, index=False)
+
+
+
+CATEGORIES = ['sofas', 'chairs' ]
+
+SOFAS_SUBCATEGORIES = [
+    "2-seaters",
+    "3-seaters",
+    "4-seaters-up",
+    "l-shape",
+    "sofa-beds",
+    "leather-sofas",
+    "recliners",
+    "armchairs",
+    "lounge-chairs",
+    "sofa-sets",
+    "outdoor-sofas",
+]
+
+CHAIRS_SUBCATEGORIES = [
+    "dining-chairs",
+    "office-chairs",
+    "bar-stools",
+    "dining-benches",
+    "benches",
+    "stools-ottomans",
+    "bean-bags-poufs",
+    "outdoor-dining-sets",
+]
+
+for category, subcategories in zip(CATEGORIES, [SOFAS_SUBCATEGORIES, CHAIRS_SUBCATEGORIES]):
+    preprocess_dataset(category, subcategories)
+
+print("Dataset preprocessing completed.")
 
 with concurrent.futures.ThreadPoolExecutor() as executor:
     futures = []
-    for category in CATEGORIES:
-        future = executor.submit(download_images_from_csv, category)
+    
+    for category, subcategories in zip(CATEGORIES, [SOFAS_SUBCATEGORIES, CHAIRS_SUBCATEGORIES]):
+        future = executor.submit(download_images_from_csv, category, subcategories)
         futures.append(future)
 
     for future in concurrent.futures.as_completed(futures):
