@@ -40,6 +40,9 @@ def download_image(url, output_path):
         
         if image.mode == 'RGBA':
             image = image.convert('RGB')
+            
+        if image.mode == 'P':
+            image = image.convert('RGB')
         
         # Save the image with the correct path and filename
         image.save(full_path)
@@ -71,7 +74,7 @@ def download_images_from_csv(category, subcategories):
                 download_image(url, file_path)
                 time.sleep(1)  # Add a delay between downloads
                 
-                delay = random.uniform(1, 3)
+                delay = random.uniform(0.5, 1)
                 time.sleep(delay)
 
 
@@ -119,7 +122,7 @@ def preprocess_dataset(category, subcategories):
 CATEGORIES = ['sofas', 'chairs' ]
 
 SOFAS_SUBCATEGORIES = [
-    "2-seaters",
+    # "2-seaters",
     "3-seaters",
     "4-seaters-up",
     "l-shape",
@@ -133,7 +136,7 @@ SOFAS_SUBCATEGORIES = [
 ]
 
 CHAIRS_SUBCATEGORIES = [
-    "dining-chairs",
+    # "dining-chairs",
     "office-chairs",
     "bar-stools",
     "dining-benches",
