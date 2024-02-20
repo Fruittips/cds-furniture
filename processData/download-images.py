@@ -1,5 +1,6 @@
 import concurrent.futures
 import random
+import signal
 import pandas as pd
 import requests
 import os
@@ -117,7 +118,13 @@ def preprocess_dataset(category, subcategories):
         df_images = pd.DataFrame(images_to_download, columns=["image_file_path", "image_file_name", "image_url"])
         df_images.to_csv(csv_file_path, index=False)
 
-
+def signal_handler(sig, frame):
+    print("Caught KeyboardInterrupt, shutting down gracefully...")
+    # You can perform any necessary cleanup here
+    # For example, cancel any pending tasks in the ThreadPoolExecutor
+    executor.shutdown(wait=False)
+    print("Exiting program.")
+    exit()
 
 CATEGORIES = ['sofas', 'chairs' ]
 
@@ -145,6 +152,8 @@ CHAIRS_SUBCATEGORIES = [
     "bean-bags-poufs",
     "outdoor-dining-sets",
 ]
+
+signal.signal(signal.SIGINT, signal_handler)
 
 for category, subcategories in zip(CATEGORIES, [SOFAS_SUBCATEGORIES, CHAIRS_SUBCATEGORIES]):
     preprocess_dataset(category, subcategories)
