@@ -13,12 +13,9 @@ def download_image(url, output_path):
     print(f"Downloading {url} to {output_path}")
     base, ext = os.path.splitext(output_path)
     
-    # Determine if we need to add an extension
     if not ext:
-        # If there's no extension, determine one from the MIME type
         response = requests.head(url, allow_redirects=True)
         content_type = response.headers.get('Content-Type')
-         # If the extension could not be determined, default to .jpg
         if extension is None:
             print(f"Unknown file extension for MIME type {content_type}, defaulting to .jpg")
             extension = '.jpg'   
@@ -73,7 +70,6 @@ def download_images_from_csv(category, subcategories):
             # Download the image if it doesn't exist already
             if not os.path.exists(file_path):
                 download_image(url, file_path)
-                time.sleep(1)  # Add a delay between downloads
                 
                 delay = random.uniform(0.5, 1)
                 time.sleep(delay)
@@ -130,8 +126,8 @@ CATEGORIES = ['sofas', 'chairs' ]
 
 SOFAS_SUBCATEGORIES = [
     # "2-seaters",
-    "3-seaters",
-    "4-seaters-up",
+    # "3-seaters",
+    # "4-seaters-up",
     "l-shape",
     "sofa-beds",
     "leather-sofas",
@@ -144,8 +140,8 @@ SOFAS_SUBCATEGORIES = [
 
 CHAIRS_SUBCATEGORIES = [
     # "dining-chairs",
-    "office-chairs",
-    "bar-stools",
+    # "office-chairs",
+    # "bar-stools",
     "dining-benches",
     "benches",
     "stools-ottomans",
