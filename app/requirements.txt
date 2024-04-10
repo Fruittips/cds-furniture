@@ -1,0 +1,10 @@
+gradio == 4.26.0
+fairscale==0.4.4
+timm
+ast
+pandas
+numpy
+matplotlib
+Pillow
+torch
+torchvision
