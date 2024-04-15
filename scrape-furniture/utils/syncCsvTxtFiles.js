@@ -46,10 +46,12 @@ const syncFiles = (categories) => {
                 .on("error", (error) => {
                     throw new Error("Error reading CSV file for", category);
                 })
-                .pipe(csv.parse({ 
-                    headers: true, 
-                    discardUnmappedColumns:true
-                }))
+                .pipe(
+                    csv.parse({
+                        headers: true,
+                        discardUnmappedColumns: true,
+                    })
+                )
                 .on("data", (row) => {
                     if (row.title && row.title.trim() !== `""`) {
                         urlsToKeep.add(row.url);
@@ -63,22 +65,22 @@ const syncFiles = (categories) => {
 
                     const writeStream = fs.createWriteStream(tempCsvFilePath);
                     fs.createReadStream(csvFilePath)
-                        .pipe(csv.parse({ 
-                            headers: true,
-                            discardUnmappedColumns: true
-                        }))
+                        .pipe(
+                            csv.parse({
+                                headers: true,
+                                discardUnmappedColumns: true,
+                            })
+                        )
                         .pipe(csv.format({ headers: true }))
                         .transform((row) => (urlsToKeep.has(row.url) ? row : null))
                         .pipe(writeStream)
                         .on("finish", () => {
                             console.log("Temporary filtered CSV created.");
 
-                            // Step 2: Delete original files
                             fs.unlinkSync(csvFilePath);
                             fs.unlinkSync(txtFilePath);
                             console.log("Original files deleted.");
 
-                            // Step 3: Rename new files to original names
                             fs.renameSync(tempCsvFilePath, csvFilePath);
                             fs.renameSync(tempTxtFilePath, txtFilePath);
                             console.log("Temporary files renamed to original file names.");

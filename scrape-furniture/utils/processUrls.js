@@ -5,12 +5,10 @@ const initProcessedUrls = (category) => {
     const dirPath = path.join(__dirname, "..", "productUrls", category, "processedUrls");
     const progressFilePath = path.join(dirPath, "processedUrls.txt");
 
-    //create folder if it doesnt exist
     if (!fs.existsSync(dirPath)) {
         fs.mkdirSync(dirPath, { recursive: true });
     }
 
-    //create file if it doesnt exist
     if (!fs.existsSync(progressFilePath)) {
         fs.writeFileSync(progressFilePath, "");
     }

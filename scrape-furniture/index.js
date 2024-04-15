@@ -80,7 +80,5 @@ const shuffleCsvByCategories = (categories) => {
 const categories = CATEGORY;
 shuffleCsvByCategories(categories);
 
-// shuffleCsvByCategories([CATEGORY[4]]); //"storage"
-// const workers = [startWorker({ category: CATEGORY[4] })];
 const workersProcess = categories.map((cat) => startWorker({ category: cat }));
 Promise.all(workersProcess).then(() => console.log("Scraping completed."));

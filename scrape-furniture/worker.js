@@ -53,7 +53,6 @@ const scrape = async ({ category }) => {
                 "--lang=en-US,en;q=0.9",
             ],
             handleSIGINT: true,
-            // slowMo: 250, //TODO: disable after testing
         });
 
         const page = await browser.newPage();
@@ -80,7 +79,6 @@ const scrape = async ({ category }) => {
                 currentUrl === "https://www.fortytwo.sg/" ||
                 currentUrl === "https://www.fortytwo.sg"
             ) {
-                // throw new Error(`Redirected home from ${url}`);
                 await closeBrowser(browser);
                 continue;
             }
@@ -221,9 +219,9 @@ const getProductDescription = async (page) => {
     if (!description) return "";
 
     let cleanedDesc = description
-        .replace(/\s*[\r\n]+/g, " ") // Replace newlines with a space
-        .trim() // Trim leading and trailing whitespace
-        .replace(/"/g, '""'); // Escape double quotes by doubling them
+        .replace(/\s*[\r\n]+/g, " ")
+        .trim()
+        .replace(/"/g, '""');
 
     return `"${cleanedDesc}"`;
 };

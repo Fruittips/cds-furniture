@@ -81,7 +81,6 @@ const urlParams = "dir=desc&limit=180&order=created_at"; //show 180 items per pa
 })();
 
 const scrollAndGetProductUrls = async (page) => {
-    /* TODO: probably dont need scrolling, need investigate if can delete */
     await page.evaluate(async () => {
         await new Promise((resolve, reject) => {
             let totalHeight = 0;

@@ -15,14 +15,12 @@ const csv = require("fast-csv");
 const writeToCsv = async ({ data, category, columns, folderName, toUpdateProgress }) => {
     const dirPath = path.join(__dirname, "..", folderName, category);
 
-    // create folder if it doesnt exist
     if (!fs.existsSync(dirPath)) {
         fs.mkdirSync(dirPath, { recursive: true });
     }
 
     const csvFilePath = path.join(dirPath, `${category}.csv`);
 
-    // create csv file with the table column headers if .csv file doesnt exist
     if (!fs.existsSync(csvFilePath)) {
         const headers = columns.join(",") + "\n";
         fs.writeFileSync(csvFilePath, headers);
