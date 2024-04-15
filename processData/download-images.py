@@ -115,28 +115,28 @@ def signal_handler(sig, frame):
 CATEGORIES = ['sofas', 'chairs' ]
 
 SOFAS_SUBCATEGORIES = [
-    # "2-seaters",
-    # "3-seaters",
-    # "4-seaters-up",
-    # "l-shape",
-    # "sofa-beds",
-    # "leather-sofas",
-    # "recliners",
-    # "armchairs",
-    # "lounge-chairs",
+    "2-seaters",
+    "3-seaters",
+    "4-seaters-up",
+    "l-shape",
+    "sofa-beds",
+    "leather-sofas",
+    "recliners",
+    "armchairs",
+    "lounge-chairs",
     "sofa-sets",
     "outdoor-sofas",
 ]
 
 CHAIRS_SUBCATEGORIES = [
-    # "dining-chairs",
-    # "office-chairs",
-    # "bar-stools",
-    # "dining-benches",
-    # "benches",
-    # "stools-ottomans",
-    # "bean-bags-poufs",
-    # "outdoor-dining-sets",
+    "dining-chairs",
+    "office-chairs",
+    "bar-stools",
+    "dining-benches",
+    "benches",
+    "stools-ottomans",
+    "bean-bags-poufs",
+    "outdoor-dining-sets",
 ]
 
 signal.signal(signal.SIGINT, signal_handler)
