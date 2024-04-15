@@ -25,13 +25,10 @@ def download_image(url, output_path):
     full_path = base + ext + extension
     
     dir_path = os.path.dirname(full_path)
-    
-    # Ensure the directory exists
     if not os.path.exists(dir_path):
         os.makedirs(dir_path, exist_ok=True)
     
     try:
-        # Download the image
         response = requests.get(url)
         response.raise_for_status()
         image = Image.open(BytesIO(response.content))
@@ -42,7 +39,6 @@ def download_image(url, output_path):
         if image.mode == 'P':
             image = image.convert('RGB')
         
-        # Save the image with the correct path and filename
         image.save(full_path)
     except Exception as e:
         print(f"Error downloading {url}: {e}")
@@ -51,7 +47,6 @@ def download_images_from_csv(category, subcategories):
     for subcategory in subcategories:
         output_path = f'../../Datasets/images/{category}/{subcategory}/'
         
-        # Read the CSV file containing image information
         csv_file_path = f'./{category}/{subcategory}/images_to_download_{subcategory}.csv'
         if not os.path.isfile(csv_file_path):
             print(f"CSV file not found for {subcategory}, skipping.")
@@ -64,10 +59,8 @@ def download_images_from_csv(category, subcategories):
             file_name = row['image_file_name']
             file_path = os.path.join(output_path, file_name)
             
-            # Create the output directory if it doesn't exist
             os.makedirs(output_path, exist_ok=True)
 
-            # Download the image if it doesn't exist already
             if not os.path.exists(file_path):
                 download_image(url, file_path)
                 
@@ -110,14 +103,11 @@ def preprocess_dataset(category, subcategories):
         csv_file_path = f'./{category}/{subcategory}/images_to_download_{subcategory}.csv'
         os.makedirs(os.path.dirname(csv_file_path), exist_ok=True)
         
-        # Write to CSV file
         df_images = pd.DataFrame(images_to_download, columns=["image_file_path", "image_file_name", "image_url"])
         df_images.to_csv(csv_file_path, index=False)
 
 def signal_handler(sig, frame):
     print("Caught KeyboardInterrupt, shutting down gracefully...")
-    # You can perform any necessary cleanup here
-    # For example, cancel any pending tasks in the ThreadPoolExecutor
     executor.shutdown(wait=False)
     print("Exiting program.")
     exit()
