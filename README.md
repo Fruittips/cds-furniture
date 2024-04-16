@@ -1,19 +1,60 @@
-# decorAID
-A SUTD 50.038 Computational Data Science project\
-Semantic furniture feature extraction and image search
+# Semantic furniture feature extraction and image search
+A SUTD 50.038 Computational Data Science project by team decorAID
+
+| Name                     | ID      |
+|--------------------------|---------|
+| Lim Sheng Xiang          | 1005005 |
+| Bryce Goh Ying Ming      | 1005016 |
+| Matthew Pohadi           | 1005379 |
+| Mah Yi Da                | 1005024 |
+| Ayu Permata Halim Mendoza| 1006069 |
+
 
 # Overview
-Problem statement:
-~TODO~
+Our project focuses on enhancing reverse image search to help homeowners find market-available furniture that matches their mood board inspirations, specifically by refining the search and recommendation after detecting furniture items.
 
-Model architecture used:
-~TODO~
+## Model
+![Siamese model](siamese.png)
+We used a Siamese network which accepts triplets images as input. In this, we froze the weights of the BLIP model, focusing our training efforts on the fully connected layers, accompanied by a triplet loss function at the end.
 
-Results:
-~TODO~
+## Model architecture and hyper parameters used
 
-UI image:
-~TODO~
+<div style="display: flex; justify-content: space-between; align-items: center;">
+    <img src="architecture.png" alt="architecture" width="300">
+    <table style="margin-left: 20px;"> 
+        <tr>
+            <th>Hyperparameter</th>
+            <th>Value</th>
+        </tr>
+        <tr>
+            <td>Learning Rate</td>
+            <td>0.00000001</td>
+        </tr>
+        <tr>
+            <td>Batch Size</td>
+            <td>512</td>
+        </tr>
+        <tr>
+            <td>Triplet Loss Margin</td>
+            <td>1.0</td>
+        </tr>
+        <tr>
+            <td>Dropout Rate</td>
+            <td>0.2</td>
+        </tr>
+        <tr>
+            <td>Epochs</td>
+            <td>5</td>
+        </tr>
+    </table>
+</div>
+
+## Results
+TODO: add results here
+
+## UI
+![Gradio app](ui.png)
+
 
 # Folder structure
 `/app`
