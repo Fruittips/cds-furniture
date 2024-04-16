@@ -26,7 +26,7 @@ To run the Gradio app of our furniture recommendation system.
 `get-all-embeddings.ipynb`\
 Get our custom model embeddings for all images in our dataset for use in our app.
 
-More details can be found in [`app/README.md`](/app/README.md)
+More details can be found in [`/app/README.md`](/app/README.md)
 
 ## `/furniture-labelling`
 `figma_labels.py`\
