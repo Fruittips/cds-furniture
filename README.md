@@ -50,9 +50,17 @@ We used a Siamese network which accepts triplets images as input. In this, we fr
 </div>
 
 ## Results
-TODO: add results here
+| Model   | Average Loss | Precision |
+|---------|--------------|-----------|
+| BLIP    | N/A          | 0.46      |
+| Siamese | 0.409        | 0.45      |
+
+Comparison of our Siamese model against the BLIP model in terms of average loss and precision.
+
 
 ## UI
+Gradio app that provides an interactive way to find furniture that matches the style of a given input image. Utilising a trained Siamese neural network model, the app processes any uploaded image of furniture and displays the top five similar furniture piece from our database.
+
 ![Gradio app](ui.png)
 
 
