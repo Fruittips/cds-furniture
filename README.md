@@ -28,7 +28,7 @@ We used a Siamese network which accepts triplets images as input. In this, we fr
         </tr>
         <tr>
             <td>Learning Rate</td>
-            <td>0.00000001</td>
+            <td>0.00000005</td>
         </tr>
         <tr>
             <td>Batch Size</td>
