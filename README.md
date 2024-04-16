@@ -2,6 +2,19 @@
 A SUTD 50.038 Computational Data Science project\
 Semantic furniture feature extraction and image search
 
+# Overview
+Problem statement:
+~TODO~
+
+Model architecture used:
+~TODO~
+
+Results:
+~TODO~
+
+UI image:
+~TODO~
+
 # Folder structure
 `/app`
 - Contains the application to run the Gradio app of our furniture recommendation system
