@@ -137,7 +137,7 @@ Steps include:
 - Calculating centroid embeddings of all groups in the reduced train dataset
 - Predict the group of all validation images with the centroid embeddings
 - Calculate the F1, precision and recall score
-- Visualise the top 5 nearest neighbours for test images
+- Visualise the top 5 nearest neighbours for validation images
 - Visualise a dot cluster map of train images and their respective groups
 
 `tuning-train.ipynb`\
