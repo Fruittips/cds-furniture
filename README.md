@@ -11,7 +11,9 @@ A SUTD 50.038 Computational Data Science project by team decorAID
 
 
 # Overview
-Our project focuses on enhancing reverse image search to help homeowners find market-available furniture that matches their mood board inspirations, specifically by refining the search and recommendation after detecting furniture items.
+Our project focuses on enhancing reverse image search to help homeowners find market-available furniture that matches their mood board inspirations, specifically by refining the search and recommendation after detecting furniture items. To do that, our model will need to:\
+(1) Fingerprint furniture by representing it as feature vectors\
+(2) Employ clustering techniques to group similar furniture while separating dissimilar ones.
 
 ## Model
 ![Siamese model](siamese.png)
